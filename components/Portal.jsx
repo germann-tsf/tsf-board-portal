@@ -695,29 +695,67 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
         </div>
       )}
 
-      {/* Recent Meetings */}
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Recent Meetings
-        </div>
-        <div>
-          {meetings.slice(0, 8).map(meeting => (
-            <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
+      {/* Upcoming Meetings */}
+      {(() => {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const upcoming = meetings.filter(m => m.date && new Date(m.date) >= today).reverse()
+        const past = meetings.filter(m => m.date && new Date(m.date) < today).slice(0, 6)
+
+        return (
+          <>
+            {upcoming.length > 0 && (
+              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
+                <div style={{ backgroundColor: '#059669', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Upcoming Meetings
+                </div>
+                <div>
+                  {upcoming.map(meeting => (
+                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
+                      </div>
+                      <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title, published: meeting.published })} style={{
+                        padding: '0.4rem 0.75rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0',
+                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#166534',
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>
+                        View Details
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title })} style={{
-                padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
-                borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}>
-                View Details
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+            )}
+
+            {past.length > 0 && (
+              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Past Meetings
+                </div>
+                <div>
+                  {past.map(meeting => (
+                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
+                      </div>
+                      <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title, published: meeting.published })} style={{
+                        padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151',
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>
+                        View Details
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })()}
     </div>
   )
 }
