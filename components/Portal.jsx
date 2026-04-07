@@ -1151,6 +1151,15 @@ export default function Portal({ meetings, boardMembers }) {
         {/* Footer */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '1rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
           <p style={{ margin: '0 0 0.5rem 0' }}>Thaddeus Stevens Foundation</p>
+          <a href="mailto:germann@stevenscollege.edu" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.5rem 1rem', backgroundColor: '#D4A843', color: '#1a1a2e',
+            borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: '600',
+            textDecoration: 'none', marginBottom: '0.5rem',
+          }}>
+            <Mail size={14} /> Questions? Email Jenny
+          </a>
+          <br />
           <a href="/login" style={{ color: '#D4A843', textDecoration: 'none', fontSize: '0.7rem' }}
             onClick={async e => { e.preventDefault(); await fetch('/api/auth', { method: 'DELETE' }); window.location.href = '/login' }}
           >
