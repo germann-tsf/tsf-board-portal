@@ -140,25 +140,19 @@ const quorumTable = [
   { size: '18-19 members', quorum: 10 },
 ]
 
-const memberCommittees = {
-  'Bob Garrett': ['Executive', 'Finance & Investment', 'Fundraising', 'Governance', 'Student Home Construction', 'Board of Directors'],
-  'April Lausch': ['Executive', 'Fundraising', 'Board of Directors'],
-  'Jeff Tankesley': ['Executive', 'Finance & Investment', 'Fundraising', 'Board of Directors'],
-  'Peter Caddick': ['Executive', 'Governance', 'Student Home Construction', 'Board of Directors'],
-  'Kyle Amor': ['Fundraising', 'Governance', 'Board of Directors'],
-  'Amy Balestier': ['Fundraising', 'Student Home Construction', 'Board of Directors'],
-  'Dan Cicala': ['Student Home Construction', 'Board of Directors'],
-  'Jared Erb': ['Finance & Investment', 'Governance', 'Board of Directors'],
-  'Marc Goodhart': ['Finance & Investment', 'Governance', 'Board of Directors'],
-  'Todd Hardy': ['Governance', 'Board of Directors'],
-  'Lynn Hocker': ['Board of Directors'],
-  'Ron Johnson': ['Fundraising', 'Board of Directors'],
-  'Dustin Junto': ['Finance & Investment', 'Student Home Construction', 'Board of Directors'],
-  'Jim Kelley': ['Fundraising', 'Student Home Construction', 'Board of Directors'],
-  'Shaun Magner': ['Fundraising', 'Governance', 'Board of Directors'],
-  'Pedro Rivera': ['Executive', 'Board of Directors'],
-  'Shannon Stump': ['Finance & Investment', 'Fundraising', 'Board of Directors'],
-  'Kate Zimmerman': ['Governance', 'Board of Directors'],
+// Committee name mapping: Notion names → portal committeeConfig names
+const committeeNameMap = {
+  'Board of Directors': 'Board of Directors',
+  'Executive Committee': 'Executive',
+  'Finance Committee': 'Finance & Investment',
+  'Fundraising Committee': 'Fundraising',
+  'Governance Committee': 'Governance',
+  'Student Home Construction Committee': 'Student Home Construction',
+}
+
+function getMemberCommittees(member) {
+  if (!member.committees) return []
+  return member.committees.map(c => committeeNameMap[c] || c)
 }
 
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────────────────
@@ -191,7 +185,7 @@ function sortBoardMembers(members) {
 }
 
 function getCommitteeMembers(committeeName, boardMembers) {
-  return boardMembers.filter(m => memberCommittees[m.name]?.includes(committeeName))
+  return boardMembers.filter(m => getMemberCommittees(m).includes(committeeName))
 }
 
 function daysUntil(dateString) {
@@ -480,7 +474,7 @@ function MemberCard({ member, onSelect }) {
 
 function MemberDetailModal({ member, committees, onClose }) {
   if (!member) return null
-  const memberCommitteeList = committees.filter(c => memberCommittees[member.name]?.includes(c.name))
+  const memberCommitteeList = committees.filter(c => getMemberCommittees(member).includes(c.name))
 
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={onClose}>
