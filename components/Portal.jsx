@@ -501,7 +501,8 @@ function MemberCard({ member, onSelect }) {
         )}
       </div>
       {member.employer && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0' }}><strong>Employer:</strong> {member.employer}</p>}
-      {member.email && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0' }}><strong>Email:</strong> {member.email}</p>}
+      {member.email && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Mail size={14} /> <a href={`mailto:${member.email}`} style={{ color: '#6b7280', textDecoration: 'none' }}>{member.email}</a></p>}
+      {member.cell && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Phone size={14} /> <a href={`tel:${member.cell}`} style={{ color: '#6b7280', textDecoration: 'none' }}>{member.cell}</a></p>}
     </div>
   )
 }
