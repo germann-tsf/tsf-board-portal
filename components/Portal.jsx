@@ -79,29 +79,63 @@ const committeeConfig = [
 const BYLAWS_PAGE_ID = '33484a2d-4690-80e3-b5a9-d01377e16519'
 const STRATEGIC_PLAN_PAGE_ID = '32a84a2d-4690-81e8-ba32-cea4fc59a5e1'
 
+const FOUNDATIONAL_DOCS_NOTION_URL = 'https://www.notion.so/Foundational-Documents-33b84a2d4690816493d2e0f50f25c440'
+
 const referenceDocuments = [
   {
-    category: 'Foundational Documents',
+    category: 'Governance & Legal',
     items: [
       { name: 'Articles of Incorporation', status: 'Current', lastReviewed: 'Sep 19, 2014', notionUrl: 'https://www.notion.so/33484a2d4690806ebaf3f1b430496b32' },
       { name: 'IRS Determination Letter (501c3)', status: 'Current', lastReviewed: '2003', notionUrl: 'https://www.notion.so/33484a2d469080659518d3cdb213e2ac' },
+      { name: 'MOU (Draft)', status: 'Draft', lastReviewed: 'Apr 2025', notionUrl: 'https://www.notion.so/33b84a2d46908003b207c9ab0ad25c86' },
+      { name: 'Bylaws', status: 'Current', lastReviewed: 'Apr 9, 2024', notionUrl: 'https://www.notion.so/33b84a2d469080038ed4fe4367ada0b4' },
+    ],
+  },
+  {
+    category: 'Strategy & Planning',
+    items: [
+      { name: '2024–2027 Strategic Plan', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d4690809eb254c89b3880be5f' },
+      { name: 'Strategic Action Plan', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/32a84a2d469081e8ba32cea4fc59a5e1' },
+      { name: 'TSCT Strategic Plan Refresh 2024–2027', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080eea6d8e2cd926dab13' },
+    ],
+  },
+  {
+    category: 'Financial Records',
+    items: [
+      { name: '2025–2026 Budget (Approved)', status: 'Current', lastReviewed: 'Oct 14, 2025', notionUrl: 'https://www.notion.so/33b84a2d46908032bf15f0b73a1bf2b8' },
+      { name: '2023–2024 990', status: 'Filed', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080a181accca27e115415' },
+      { name: '2022–2023 990', status: 'Filed', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080eb80bdd1a9d47052fc' },
+      { name: '2023–2024 Audit / Financial Review', status: 'Complete', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080a4ba66ce1f4bd5bea4' },
+      { name: '2022–2023 Financial Statement', status: 'Complete', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d4690808a99d9f5ab5548cefc' },
     ],
   },
   {
     category: 'Policies',
     items: [
-      { name: 'Conflict of Interest Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
-      { name: 'Whistleblower Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
-      { name: 'Document Retention Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
-      { name: 'Gift Acceptance Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
+      { name: 'Conflict of Interest Policy & Affirmation', status: 'Current', lastReviewed: 'May 22, 2024', notionUrl: 'https://www.notion.so/33b84a2d469080139b44c6b3dad8e5bb' },
+      { name: 'Investment Policy', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d46908016b2e4e200c8f25ca1' },
+      { name: 'Gift Acceptance Policy', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d46908066bd2bf552207af1e2' },
+      { name: 'Using Funds Through TSF Policy', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d4690801aae26dd4aa22195fd' },
+      { name: 'Administrative Fee Policy', status: 'Revised', lastReviewed: 'May 22, 2024', notionUrl: 'https://www.notion.so/33b84a2d469080978911c80e6bec8c73' },
+      { name: 'Capitalization Policy', status: 'Current', lastReviewed: 'May 22, 2024', notionUrl: 'https://www.notion.so/33b84a2d469080a2ac84cde0b1de5e3e' },
+      { name: 'Non-Discrimination Policy', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d46908044950fec77ef514fce' },
     ],
   },
   {
-    category: 'Board Member Resources',
+    category: 'Insurance',
     items: [
-      { name: 'Board Member Agreement', status: '', lastReviewed: 'Sign and return to ED', notionUrl: '' },
-      { name: 'Board Orientation Packet', status: '', lastReviewed: 'For new members', notionUrl: '' },
-      { name: 'Org Chart', status: '', lastReviewed: 'Current staff structure', notionUrl: '' },
+      { name: 'Commercial Package Policy (Selective) 2025–26', status: 'Active', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080b58c66cb3cb38dc481' },
+      { name: 'Executive Package (USLI-Apogee) 2025–26', status: 'Active', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080c8b4f6cb38594d2b40' },
+      { name: 'Workers Comp (Eastern Alliance) 2025–26', status: 'Active', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d46908062b91ce237b9cd9214' },
+    ],
+  },
+  {
+    category: 'Reports & Resources',
+    items: [
+      { name: "2024–2025 President's Annual Report", status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080d6b102e50f6737873c' },
+      { name: "2023–2024 President's Annual Report", status: '', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080c7a3c2cc4a03ff9363' },
+      { name: "2022–2023 President's Annual Report", status: '', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080238f71d70cf17f3b7c' },
+      { name: 'Campus Map 2024–2025', status: 'Current', lastReviewed: '', notionUrl: 'https://www.notion.so/33b84a2d469080c7ab5acb1b6e66ee28' },
     ],
   },
 ]
@@ -1037,6 +1071,7 @@ export default function Portal({ meetings, boardMembers }) {
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
   const [committeesOpen, setCommitteesOpen] = useState(true)
+  const [expandedRefCategories, setExpandedRefCategories] = useState({})
 
   const navigate = useCallback((page, params = {}) => {
     setCurrentPage(page)
@@ -1135,7 +1170,51 @@ export default function Portal({ meetings, boardMembers }) {
           <SectionLabel>Resources</SectionLabel>
           <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
           <SidebarNavItem label="Strategic Plan" icon={Target} active={currentPage === 'strategic-plan'} onClick={() => navigate('strategic-plan')} />
-          <SidebarNavItem label="Reference Documents" icon={FileText} active={currentPage === 'reference'} onClick={() => navigate('reference')} />
+
+          {/* Reference Document Categories — each expands to show items */}
+          {referenceDocuments.map((section) => (
+            <div key={section.category}>
+              <button
+                onClick={() => setExpandedRefCategories(prev => ({ ...prev, [section.category]: !prev[section.category] }))}
+                style={{
+                  width: '100%', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none',
+                  fontSize: '0.85rem', fontWeight: '400', color: 'rgba(255,255,255,0.75)',
+                  cursor: 'pointer', textAlign: 'left',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)' }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <FileText size={16} /> {section.category}
+                </span>
+                <ChevronDown size={14} style={{
+                  transform: expandedRefCategories[section.category] ? 'rotate(0deg)' : 'rotate(-90deg)',
+                  transition: 'transform 0.15s', color: 'rgba(255,255,255,0.45)',
+                }} />
+              </button>
+              {expandedRefCategories[section.category] && section.items.map((item, i) => (
+                <a
+                  key={i}
+                  href={item.notionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    padding: '0.4rem 1rem 0.4rem 2.5rem', fontSize: '0.78rem',
+                    color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
+                    backgroundColor: 'transparent', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#D4A843' }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
+                >
+                  {item.name}
+                  <ExternalLink size={10} style={{ opacity: 0.5, flexShrink: 0 }} />
+                </a>
+              ))}
+            </div>
+          ))}
+
           <SidebarNavItem label="Quick Links" icon={Link2} active={currentPage === 'links'} onClick={() => navigate('links')} />
         </div>
 

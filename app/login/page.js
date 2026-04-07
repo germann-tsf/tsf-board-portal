@@ -39,28 +39,39 @@ export default function LoginPage() {
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: '#f9fafb',
+      backgroundColor: '#faf8f5',
     }}>
       {/* Header */}
       <div style={{
-        backgroundColor: '#0F172A',
-        padding: '2rem 1rem',
+        backgroundColor: '#6B1D38',
+        padding: '2.5rem 1rem 2rem',
         textAlign: 'center',
+        borderBottom: '4px solid #D4A843',
       }}>
+        <div style={{
+          fontSize: '0.7rem',
+          fontWeight: '600',
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase',
+          color: '#D4A843',
+          marginBottom: '0.75rem',
+        }}>
+          Thaddeus Stevens Foundation
+        </div>
         <h1 style={{
           color: 'white',
           fontSize: '2rem',
           fontWeight: '700',
           margin: '0 0 0.5rem 0',
         }}>
-          TSF Board Portal
+          Board Portal
         </h1>
         <p style={{
-          color: '#cbd5e1',
+          color: 'rgba(255,255,255,0.7)',
           fontSize: '0.875rem',
           margin: 0,
         }}>
-          The Shelter Forum Board of Directors
+          The Shelter Forum, Inc.
         </p>
       </div>
 
@@ -77,17 +88,18 @@ export default function LoginPage() {
           maxWidth: '400px',
           backgroundColor: 'white',
           borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 4px 12px rgba(107, 29, 56, 0.08)',
           padding: '2rem',
+          border: '1px solid #e8e0d8',
         }}>
           <h2 style={{
-            fontSize: '1.5rem',
+            fontSize: '1.25rem',
             fontWeight: '600',
             marginBottom: '1.5rem',
             textAlign: 'center',
-            color: '#1f2937',
+            color: '#2A3D5C',
           }}>
-            Login
+            Board Member Login
           </h2>
 
           <form onSubmit={handleSubmit}>
@@ -138,7 +150,7 @@ export default function LoginPage() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                backgroundColor: '#3b82f6',
+                backgroundColor: '#6B1D38',
                 color: 'white',
                 fontSize: '1rem',
                 fontWeight: '600',
