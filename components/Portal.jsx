@@ -620,7 +620,6 @@ function useNotionPage(pageId) {
 // ─── PAGE: Dashboard ────────────────────────────────────────────────────
 
 function DashboardPage({ meetings, boardMembers, onNavigate }) {
-  const nextMeeting = getNextMeeting(meetings)
 
   return (
     <div>
@@ -681,34 +680,7 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
         </button>
       </div>
 
-      {/* Next Meeting */}
-      {nextMeeting && (
-        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
-          <div style={{ background: 'linear-gradient(135deg, #6B1D38, #8B2D52)', color: 'white', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Calendar size={20} />
-            <span style={{ fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Next Meeting</span>
-          </div>
-          <div style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>{nextMeeting.title}</h3>
-            <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar size={16} style={{ color: '#6B1D38' }} />
-                <span style={{ fontSize: '0.9rem', color: '#374151' }}>{formatDate(nextMeeting.date)}</span>
-              </div>
-            </div>
-            <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title, published: nextMeeting.published })} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.75rem 1.25rem', backgroundColor: '#6B1D38', color: 'white',
-              border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem',
-              fontWeight: '600', cursor: 'pointer',
-            }}>
-              View Agenda & Documents <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming Meetings */}
+      {/* Upcoming & Past Meetings */}
       {(() => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
