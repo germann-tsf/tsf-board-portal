@@ -141,25 +141,24 @@ const quorumTable = [
 ]
 
 const memberCommittees = {
+  'Bob Garrett': ['Executive', 'Finance & Investment', 'Fundraising', 'Governance', 'Student Home Construction', 'Board of Directors'],
+  'April Lausch': ['Executive', 'Fundraising', 'Board of Directors'],
+  'Jeff Tankesley': ['Executive', 'Finance & Investment', 'Fundraising', 'Board of Directors'],
   'Peter Caddick': ['Executive', 'Governance', 'Student Home Construction', 'Board of Directors'],
+  'Kyle Amor': ['Fundraising', 'Governance', 'Board of Directors'],
+  'Amy Balestier': ['Fundraising', 'Student Home Construction', 'Board of Directors'],
   'Dan Cicala': ['Student Home Construction', 'Board of Directors'],
   'Jared Erb': ['Finance & Investment', 'Governance', 'Board of Directors'],
-  'Bob Garrett': ['Executive', 'Governance', 'Fundraising', 'Finance & Investment', 'Student Home Construction', 'Board of Directors'],
-  'Marc Goodhart': ['Board of Directors'],
+  'Marc Goodhart': ['Finance & Investment', 'Governance', 'Board of Directors'],
   'Todd Hardy': ['Governance', 'Board of Directors'],
-  'Lynn Hocker': ['Fundraising', 'Board of Directors'],
+  'Lynn Hocker': ['Board of Directors'],
   'Ron Johnson': ['Fundraising', 'Board of Directors'],
-  'Dustin Junto': ['Student Home Construction', 'Finance & Investment', 'Board of Directors'],
-  'Jim Kelley': ['Board of Directors'],
-  'April Lausch': ['Executive', 'Fundraising', 'Board of Directors'],
-  'Shaun Magner': ['Governance', 'Fundraising', 'Board of Directors'],
+  'Dustin Junto': ['Finance & Investment', 'Student Home Construction', 'Board of Directors'],
+  'Jim Kelley': ['Fundraising', 'Student Home Construction', 'Board of Directors'],
+  'Shaun Magner': ['Fundraising', 'Governance', 'Board of Directors'],
   'Pedro Rivera': ['Executive', 'Board of Directors'],
-  'Shannon Stump': ['Fundraising', 'Finance & Investment', 'Board of Directors'],
-  'Jeff Tankesley': ['Finance & Investment', 'Executive', 'Board of Directors'],
-  'John Yurchak': ['Student Home Construction', 'Finance & Investment', 'Fundraising', 'Board of Directors'],
+  'Shannon Stump': ['Finance & Investment', 'Fundraising', 'Board of Directors'],
   'Kate Zimmerman': ['Governance', 'Board of Directors'],
-  'Kyle Amor': [],
-  'Amy Balestier': [],
 }
 
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────────────────
