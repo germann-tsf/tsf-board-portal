@@ -706,7 +706,7 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
                         borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#166534',
                         cursor: 'pointer', whiteSpace: 'nowrap',
                       }}>
-                        View Details
+                        View Agenda & Minutes
                       </button>
                     </div>
                   ))}
@@ -731,7 +731,7 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
                         borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151',
                         cursor: 'pointer', whiteSpace: 'nowrap',
                       }}>
-                        View Details
+                        View Agenda & Minutes
                       </button>
                     </div>
                   ))}
@@ -814,7 +814,6 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
-                  {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
                 </div>
                 <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
@@ -822,7 +821,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
                 padding: '0.4rem 0.75rem', backgroundColor: m.published ? '#f9fafb' : '#f9fafb', border: '1px solid #d1d5db',
                 borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
               }}>
-                {m.published ? 'View Agenda' : 'View Details'}
+                View Agenda & Minutes
               </button>
             </div>
           ))}
@@ -842,7 +841,6 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
-                  {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
                 </div>
                 <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
@@ -850,7 +848,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
                 padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
                 borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
               }}>
-                {m.published ? 'View Minutes' : 'View Details'}
+                View Agenda & Minutes
               </button>
             </div>
           ))
