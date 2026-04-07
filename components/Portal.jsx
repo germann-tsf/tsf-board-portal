@@ -1117,9 +1117,7 @@ export default function Portal({ meetings, boardMembers }) {
           <SidebarNavItem label="Board Members" icon={Users} active={currentPage === 'members'} onClick={() => navigate('members')} />
           <SidebarNavItem label="Term Expirations" icon={Clock} active={currentPage === 'term-expirations'} onClick={() => navigate('term-expirations')} />
 
-          {/* Meetings Section */}
-          <SectionLabel>Meetings</SectionLabel>
-          <SidebarNavItem label="Board of Directors" icon={Calendar} active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} />
+          <SidebarNavItem label="Board Meetings" icon={Calendar} active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} />
 
           {/* Collapsible Committees */}
           <button onClick={() => setCommitteesOpen(!committeesOpen)} style={{
