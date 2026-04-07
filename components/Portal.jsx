@@ -1067,7 +1067,7 @@ function BoardMemberDirectoryPage({ boardMembers }) {
       </div>
 
       <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
               <th style={thStyle}>Name</th>
@@ -1077,6 +1077,8 @@ function BoardMemberDirectoryPage({ boardMembers }) {
               <th style={thStyle}>Committee(s)</th>
               <th style={thStyle}>Email</th>
               <th style={thStyle}>Phone</th>
+              <th style={thStyle}>Term #</th>
+              <th style={thStyle}>Term Start</th>
               <th style={thStyle}>Term End</th>
             </tr>
           </thead>
@@ -1085,6 +1087,8 @@ function BoardMemberDirectoryPage({ boardMembers }) {
               const type = getMemberType(m)
               const role = getMemberDisplayRole(m)
               const badgeColor = typeBadgeColors[type] || '#6b7280'
+              const termDays = daysUntil(m.termEnd)
+              const termWarning = termDays >= 0 && termDays <= 365
               return (
                 <tr key={m.id} style={{ backgroundColor: type !== 'Board Member' ? '#f9fafb' : 'white' }}>
                   <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
@@ -1098,7 +1102,9 @@ function BoardMemberDirectoryPage({ boardMembers }) {
                   <td style={tdStyle}>
                     {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
                   </td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termEnd) || '-'}</td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center' }}>{m.termCount || '-'}</td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termStart) || '-'}</td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap', color: termWarning ? '#DC2626' : '#374151', fontWeight: termWarning ? '600' : '400' }}>{formatDate(m.termEnd) || '-'}</td>
                 </tr>
               )
             })}
