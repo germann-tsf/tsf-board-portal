@@ -608,10 +608,6 @@ function useNotionPage(pageId) {
 
 function DashboardPage({ meetings, boardMembers, onNavigate }) {
   const nextMeeting = getNextMeeting(meetings)
-  const expiringCount = boardMembers.filter(m => {
-    const d = daysUntil(m.termEnd)
-    return d >= 0 && d <= 365
-  }).length
 
   return (
     <div>
@@ -620,12 +616,56 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
         Welcome to the Thaddeus Stevens Foundation Board Portal. Serving our mission of supporting students and community since 1905.
       </p>
 
-      {/* Stats */}
+      {/* Quick Access Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <StatCard icon={Users} title="Board Members" value={boardMembers.length} color="#6B1D38" />
-        <StatCard icon={Calendar} title="Total Meetings" value={meetings.length} color="#2A4D6E" />
-        <StatCard icon={Building2} title="Committees" value={committeeConfig.length} color="#B8860B" />
-        {expiringCount > 0 && <StatCard icon={AlertTriangle} title="Terms Expiring (12 mo)" value={expiringCount} color="#DC2626" />}
+        <button onClick={() => onNavigate('bylaws')} style={{
+          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
+          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#6B1D38'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
+        >
+          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#6B1D3820', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B1D38', flexShrink: 0 }}>
+            <Shield size={20} />
+          </div>
+          <div>
+            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Bylaws</p>
+            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>Governing document</p>
+          </div>
+        </button>
+        <button onClick={() => onNavigate('strategic-plan')} style={{
+          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
+          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#2A4D6E'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
+        >
+          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#2A4D6E20', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2A4D6E', flexShrink: 0 }}>
+            <Target size={20} />
+          </div>
+          <div>
+            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Strategic Plan</p>
+            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>2024–2027 plan</p>
+          </div>
+        </button>
+        <button onClick={() => onNavigate('mission')} style={{
+          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
+          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#D4A843'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
+        >
+          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#D4A84320', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4A843', flexShrink: 0 }}>
+            <BookOpen size={20} />
+          </div>
+          <div>
+            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Mission</p>
+            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>Our purpose</p>
+          </div>
+        </button>
       </div>
 
       {/* Next Meeting */}
@@ -894,69 +934,161 @@ function MembersPage({ boardMembers, onSelectMember }) {
   )
 }
 
-// ─── PAGE: Term Expirations ─────────────────────────────────────────────
+// ─── PAGE: Board Member Directory ──────────────────────────────────────
 
-function TermExpirationPage({ boardMembers }) {
-  const membersWithTerms = sortBoardMembers(boardMembers)
-    .filter(m => m.termEnd)
-    .sort((a, b) => new Date(a.termEnd) - new Date(b.termEnd))
+function getMemberType(member) {
+  const pos = member.position || []
+  if (pos.some(p => p === 'Emeritus')) return 'Ex Officio'
+  if (pos.some(p => p.startsWith('Non Board Member - Staff'))) return 'Staff'
+  if (pos.some(p => p.startsWith('Non Board Member - Community'))) return 'Community'
+  return 'Board Member'
+}
 
-  const getUrgencyColor = (days) => {
-    if (days < 0) return '#DC2626'
-    if (days <= 90) return '#EA580C'
-    if (days <= 180) return '#D97706'
-    if (days <= 365) return '#2563EB'
-    return '#059669'
+function getMemberDisplayRole(member) {
+  const pos = member.position || []
+  const leadership = pos.filter(p =>
+    !p.startsWith('Non Board Member') && p !== 'Board Member' && p !== 'Emeritus'
+  )
+  if (leadership.length > 0) return leadership.join(', ')
+  return null
+}
+
+function BoardMemberDirectoryPage({ boardMembers }) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState('all')
+
+  const sorted = sortBoardMembers(boardMembers)
+  const filtered = sorted.filter(m => {
+    const type = getMemberType(m)
+    if (filterType !== 'all' && type !== filterType) return false
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase()
+      return (
+        m.name?.toLowerCase().includes(q) ||
+        m.employer?.toLowerCase().includes(q) ||
+        m.committees?.some(c => c.toLowerCase().includes(q))
+      )
+    }
+    return true
+  })
+
+  const typeBadgeColors = {
+    'Board Member': '#059669',
+    'Ex Officio': '#7C3AED',
+    'Staff': '#2563EB',
+    'Community': '#D97706',
   }
 
-  const getUrgencyLabel = (days) => {
-    if (days < 0) return 'Expired'
-    if (days <= 90) return 'Expiring Soon'
-    if (days <= 180) return 'Within 6 Months'
-    if (days <= 365) return 'Within 1 Year'
-    return 'Active'
-  }
+  const thStyle = { textAlign: 'left', padding: '0.75rem 0.75rem', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', whiteSpace: 'nowrap' }
+  const tdStyle = { padding: '0.6rem 0.75rem', fontSize: '0.85rem', color: '#374151', borderBottom: '1px solid #e5e7eb' }
+
+  const filterBtnStyle = (active) => ({
+    padding: '0.4rem 0.75rem', fontSize: '0.8rem', fontWeight: active ? '600' : '400',
+    border: active ? '1px solid #6B1D38' : '1px solid #d1d5db', borderRadius: '0.375rem',
+    backgroundColor: active ? '#6B1D38' : 'white', color: active ? 'white' : '#374151',
+    cursor: 'pointer',
+  })
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Term Expirations</h1>
-      <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '0.9rem' }}>Board member terms sorted by expiration date. Members whose terms are expiring soon are highlighted.</p>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Member Directory</h1>
+      <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+        All current board members, ex officio, staff, and community committee members.
+      </p>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1', maxWidth: '300px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+          <input type="text" placeholder="Search name, employer, committee..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{
+            width: '100%', padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+            border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.85rem', fontFamily: 'inherit', boxSizing: 'border-box',
+          }} />
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          {['all', 'Board Member', 'Staff', 'Community', 'Ex Officio'].map(f => (
+            <button key={f} onClick={() => setFilterType(f)} style={filterBtnStyle(filterType === f)}>
+              {f === 'all' ? 'All' : f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Member</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Position</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Term Start</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Term End</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Term</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Type</th>
+              <th style={thStyle}>Role</th>
+              <th style={thStyle}>Employer</th>
+              <th style={thStyle}>Committee(s)</th>
+              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Phone</th>
+              <th style={thStyle}>Term End</th>
             </tr>
           </thead>
           <tbody>
-            {membersWithTerms.map(m => {
-              const days = daysUntil(m.termEnd)
-              const color = getUrgencyColor(days)
-              const label = getUrgencyLabel(days)
+            {filtered.map(m => {
+              const type = getMemberType(m)
+              const role = getMemberDisplayRole(m)
+              const badgeColor = typeBadgeColors[type] || '#6b7280'
               return (
-                <tr key={m.id} style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: days <= 90 ? color + '08' : 'white' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>{m.name}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{m.position?.join(', ') || 'Board Member'}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{formatDate(m.termStart)}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#374151', fontWeight: '500' }}>{formatDate(m.termEnd)}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{m.termCount || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem' }}>
-                    <Badge text={label} color={color} />
+                <tr key={m.id} style={{ backgroundColor: type !== 'Board Member' ? '#f9fafb' : 'white' }}>
+                  <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
+                  <td style={tdStyle}><Badge text={type} color={badgeColor} /></td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.committees?.join(', ') || '-'}</td>
+                  <td style={tdStyle}>
+                    {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
                   </td>
+                  <td style={tdStyle}>
+                    {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
+                  </td>
+                  <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termEnd) || '-'}</td>
                 </tr>
               )
             })}
           </tbody>
         </table>
-        {membersWithTerms.length === 0 && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No term data available.</div>
+        {filtered.length === 0 && (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No members found.</div>
         )}
+      </div>
+
+      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
+        Showing {filtered.length} of {boardMembers.length} members.
+        Non-board rows (Staff, Community, Ex Officio) are shaded to distinguish them from voting board members.
+      </p>
+    </div>
+  )
+}
+
+// ─── PAGE: Mission ─────────────────────────────────────────────────────
+
+function MissionPage() {
+  return (
+    <div>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <BookOpen size={28} style={{ color: '#D4A843' }} /> Our Mission
+      </h1>
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2.5rem' }}>
+        <div style={{ borderLeft: '4px solid #D4A843', paddingLeft: '1.5rem', marginBottom: '2rem' }}>
+          <p style={{ fontSize: '1.2rem', lineHeight: '1.8', color: '#1f2937', fontStyle: 'italic', margin: 0 }}>
+            The Thaddeus Stevens Foundation supports the mission of Thaddeus Stevens College of Technology by raising funds and managing resources to provide scholarships, enhance educational programs, and improve campus facilities for students pursuing technical education.
+          </p>
+        </div>
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#6B1D38', marginBottom: '1rem' }}>Our Purpose</h3>
+          <p style={{ fontSize: '0.95rem', lineHeight: '1.7', color: '#374151', margin: '0 0 1.5rem 0' }}>
+            Founded in 1905, the Thaddeus Stevens Foundation serves as the fundraising and asset management arm of Thaddeus Stevens College of Technology. The Foundation is a 501(c)(3) nonprofit organization governed by a volunteer Board of Directors committed to ensuring that students have access to high-quality technical education and the support they need to succeed.
+          </p>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#6B1D38', marginBottom: '1rem' }}>What We Do</h3>
+          <p style={{ fontSize: '0.95rem', lineHeight: '1.7', color: '#374151', margin: 0 }}>
+            The Foundation raises and stewards charitable gifts, manages endowment and investment funds, awards scholarships, funds campus improvement projects, and supports programs that strengthen student outcomes. The Board of Directors provides fiduciary oversight and strategic guidance to advance the Foundation's mission in partnership with the College.
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -1109,8 +1241,10 @@ export default function Portal({ meetings, boardMembers }) {
         return <DashboardPage meetings={meetings} boardMembers={boardMembers} onNavigate={(page, params) => navigate(page, { ...params, backTo: 'dashboard' })} />
       case 'members':
         return <MembersPage boardMembers={boardMembers} onSelectMember={setSelectedMember} />
-      case 'term-expirations':
-        return <TermExpirationPage boardMembers={boardMembers} />
+      case 'board-directory':
+        return <BoardMemberDirectoryPage boardMembers={boardMembers} />
+      case 'mission':
+        return <MissionPage />
       case 'bylaws':
         return <NotionContentPage pageId={BYLAWS_PAGE_ID} title="Bylaws" icon={<Shield size={28} style={{ color: '#6B1D38' }} />} />
       case 'strategic-plan':
@@ -1144,9 +1278,7 @@ export default function Portal({ meetings, boardMembers }) {
           {/* Top Level */}
           <SidebarNavItem label="Dashboard" icon={LayoutDashboard} active={currentPage === 'dashboard'} onClick={() => navigate('dashboard')} />
           <SidebarNavItem label="Board Members" icon={Users} active={currentPage === 'members'} onClick={() => navigate('members')} />
-          <SidebarNavItem label="Term Expirations" icon={Clock} active={currentPage === 'term-expirations'} onClick={() => navigate('term-expirations')} />
-
-          <SidebarNavItem label="Board Meetings" icon={Calendar} active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} />
+          <SidebarNavItem label="Board Directory" icon={FileText} active={currentPage === 'board-directory'} onClick={() => navigate('board-directory')} />
 
           {/* Collapsible Committees */}
           <button onClick={() => setCommitteesOpen(!committeesOpen)} style={{
