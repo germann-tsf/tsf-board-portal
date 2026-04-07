@@ -191,16 +191,29 @@ function getMemberCommittees(member) {
 
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────────────────
 
+function parseLocalDate(dateString) {
+  if (!dateString) return null
+  // Notion dates like '2026-04-14' are date-only (no time). new Date() parses
+  // them as UTC midnight, which shifts back a day in US timezones. Split and
+  // construct as local to avoid the off-by-one.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [y, m, d] = dateString.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+  return new Date(dateString)
+}
+
 function formatDate(dateString) {
   if (!dateString) return ''
-  const date = new Date(dateString)
+  const date = parseLocalDate(dateString)
+  if (!date) return ''
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function getNextMeeting(meetings) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const futureMeetings = meetings.filter(m => m.date && new Date(m.date) >= today)
+  const futureMeetings = meetings.filter(m => m.date && parseLocalDate(m.date) >= today)
   if (futureMeetings.length === 0) return null
   return futureMeetings[futureMeetings.length - 1]
 }
@@ -224,7 +237,7 @@ function getCommitteeMembers(committeeName, boardMembers) {
 
 function daysUntil(dateString) {
   if (!dateString) return Infinity
-  const target = new Date(dateString)
+  const target = parseLocalDate(dateString)
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   target.setHours(0, 0, 0, 0)
@@ -699,8 +712,8 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
       {(() => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        const upcoming = meetings.filter(m => m.date && new Date(m.date) >= today).reverse()
-        const past = meetings.filter(m => m.date && new Date(m.date) < today).slice(0, 6)
+        const upcoming = meetings.filter(m => m.date && parseLocalDate(m.date) >= today).reverse()
+        const past = meetings.filter(m => m.date && parseLocalDate(m.date) < today).slice(0, 6)
 
         return (
           <>
@@ -765,8 +778,9 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
 function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }) {
   const committeeMeetings = meetings.filter(m => m.committee === committee.name)
   const nextMeeting = getNextMeeting(committeeMeetings)
-  const pastMeetings = committeeMeetings.filter(m => !m.date || new Date(m.date) < new Date())
-  const futureMeetings = committeeMeetings.filter(m => m.date && new Date(m.date) >= new Date()).reverse()
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  const pastMeetings = committeeMeetings.filter(m => !m.date || parseLocalDate(m.date) < now)
+  const futureMeetings = committeeMeetings.filter(m => m.date && parseLocalDate(m.date) >= now).reverse()
   const members = getCommitteeMembers(committee.name, boardMembers)
 
   return (
