@@ -1095,8 +1095,7 @@ export default function Portal({ meetings, boardMembers }) {
           <div style={{ fontSize: '0.6rem', fontWeight: '600', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#D4A843', marginBottom: '0.25rem' }}>
             Thaddeus Stevens Foundation
           </div>
-          <h1 style={{ fontSize: '1.2rem', fontWeight: '700', margin: '0 0 0.15rem 0', color: 'white' }}>Board Portal</h1>
-          <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)', margin: 0 }}>The Shelter Forum, Inc.</p>
+          <h1 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'white' }}>Board Portal</h1>
         </div>
 
         {/* Navigation */}
