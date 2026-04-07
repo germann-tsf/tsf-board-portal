@@ -691,7 +691,7 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
           <>
             {upcoming.length > 0 && (
               <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
-                <div style={{ backgroundColor: '#059669', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ backgroundColor: '#6B1D38', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Upcoming Meetings
                 </div>
                 <div>
@@ -702,8 +702,8 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
                         <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
                       </div>
                       <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title, published: meeting.published })} style={{
-                        padding: '0.4rem 0.75rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0',
-                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#166534',
+                        padding: '0.4rem 0.75rem', backgroundColor: '#fdf2f5', border: '1px solid #6B1D3840',
+                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#6B1D38',
                         cursor: 'pointer', whiteSpace: 'nowrap',
                       }}>
                         View Agenda & Minutes
