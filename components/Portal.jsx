@@ -10,7 +10,6 @@ import {
   Building2,
   Mail,
   Phone,
-  MapPin,
   LayoutDashboard,
   FileText,
   Link2,
@@ -615,10 +614,6 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
                 <Calendar size={16} style={{ color: '#6B1D38' }} />
                 <span style={{ fontSize: '0.9rem', color: '#374151' }}>{formatDate(nextMeeting.date)}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin size={16} style={{ color: '#6B1D38' }} />
-                <span style={{ fontSize: '0.9rem', color: '#374151' }}>{nextMeeting.location || 'TBD'}</span>
-              </div>
             </div>
             <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title, published: nextMeeting.published })} style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
@@ -642,7 +637,7 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
             <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)} {meeting.location && `• ${meeting.location}`}</p>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
               </div>
               <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title })} style={{
                 padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
@@ -706,7 +701,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
         <div style={{ backgroundColor: committee.color + '10', border: `1px solid ${committee.color}30`, borderRadius: '0.5rem', padding: '1.25rem', marginBottom: '2rem', borderLeft: `4px solid ${committee.color}` }}>
           <p style={{ fontSize: '0.7rem', color: committee.color, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>Next Meeting</p>
           <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.5rem 0' }}>{nextMeeting.title}</h3>
-          <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>{formatDate(nextMeeting.date)} {nextMeeting.location && `• ${nextMeeting.location}`}</p>
+          <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>{formatDate(nextMeeting.date)}</p>
           <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title, published: nextMeeting.published })} style={{
             padding: '0.5rem 1rem', backgroundColor: committee.color, color: 'white',
             border: 'none', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer',
@@ -729,7 +724,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
                   {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
                 </div>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)} {m.location && `• ${m.location}`}</p>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
               <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title, published: m.published })} style={{
                 padding: '0.4rem 0.75rem', backgroundColor: m.published ? '#f9fafb' : '#f9fafb', border: '1px solid #d1d5db',
@@ -757,7 +752,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
                   {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
                 </div>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)} {m.location && `• ${m.location}`}</p>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
               <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title, published: m.published })} style={{
                 padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
