@@ -1261,6 +1261,7 @@ export default function Portal({ meetings, boardMembers }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
+  const [boardOpen, setBoardOpen] = useState(true)
   const [committeesOpen, setCommitteesOpen] = useState(true)
   const [expandedRefCategories, setExpandedRefCategories] = useState({})
 
@@ -1335,8 +1336,28 @@ export default function Portal({ meetings, boardMembers }) {
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '0.5rem' }}>
           {/* Top Level */}
           <SidebarNavItem label="Dashboard" icon={LayoutDashboard} active={currentPage === 'dashboard'} onClick={() => navigate('dashboard')} />
-          <SidebarNavItem label="Board Members" icon={Users} active={currentPage === 'members'} onClick={() => navigate('members')} />
-          <SidebarNavItem label="Board Directory" icon={FileText} active={currentPage === 'board-directory'} onClick={() => navigate('board-directory')} />
+
+          {/* Collapsible Board of Directors */}
+          <button onClick={() => setBoardOpen(!boardOpen)} style={{
+            width: '100%', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none',
+            fontSize: '0.85rem', fontWeight: '400', color: 'rgba(255,255,255,0.75)',
+            cursor: 'pointer',
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Users size={16} /> Board of Directors
+            </span>
+            <ChevronDown size={14} style={{
+              transform: boardOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+              transition: 'transform 0.15s', color: 'rgba(255,255,255,0.45)',
+            }} />
+          </button>
+          {boardOpen && (
+            <>
+              <SidebarNavItem label="Board Directory" active={currentPage === 'board-directory'} onClick={() => navigate('board-directory')} indent />
+              <SidebarNavItem label="Board Meetings" active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} indent />
+            </>
+          )}
 
           {/* Collapsible Committees */}
           <button onClick={() => setCommitteesOpen(!committeesOpen)} style={{
