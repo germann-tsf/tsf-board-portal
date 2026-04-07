@@ -452,6 +452,21 @@ function NotionBlocks({ blocks }) {
                 </table>
               </div>
             )
+          case 'transcription':
+            return (
+              <div key={idx} style={{ margin: '1.5rem 0', borderTop: '2px solid #6B1D38', paddingTop: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#6B1D38', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={20} /> Meeting Minutes
+                </h2>
+                {block.text && block.text.length > 0 && (
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 1rem 0', fontStyle: 'italic' }}><RichText segments={block.text} /></p>
+                )}
+                {block.children && block.children.length > 0 && <NotionBlocks blocks={block.children} />}
+                {(!block.children || block.children.length === 0) && (
+                  <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.9rem' }}>Meeting minutes are being prepared.</p>
+                )}
+              </div>
+            )
           case 'child_page':
             return (
               <div key={idx} style={{ margin: '0.5rem 0', padding: '0.5rem 1rem', backgroundColor: '#f9fafb', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: '#374151' }}>
