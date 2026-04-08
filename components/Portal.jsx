@@ -1489,7 +1489,7 @@ export default function Portal({ meetings, boardMembers }) {
           {/* Resources Section */}
           <SectionLabel>Resources</SectionLabel>
           <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
-          <SidebarNavItem label="Strategic Plan" icon={Target} active={currentPage === 'strategic-plan'} onClick={() => navigate('strategic-plan')} />
+
 
           {/* Reference Document Categories */}
           {referenceDocuments.map((section) => (
