@@ -633,6 +633,13 @@ function useNotionPage(pageId) {
   return { data, loading, error }
 }
 
+// Extract Notion page ID from URL (e.g., "https://www.notion.so/33484a2d4690806ebaf3f1b430496b32" -> "33484a2d4690806ebaf3f1b430496b32")
+function extractNotionPageId(notionUrl) {
+  if (!notionUrl) return null
+  const match = notionUrl.match(/notion\.so\/([a-zA-Z0-9]+)/)
+  return match ? match[1] : null
+}
+
 // ─── PAGE: Dashboard ────────────────────────────────────────────────────
 
 function DashboardPage({ meetings, boardMembers, onNavigate }) {
@@ -1184,6 +1191,37 @@ function BoardMemberDirectoryPage({ boardMembers }) {
 
 // ─── PAGE: Mission ─────────────────────────────────────────────────────
 
+// ─── PAGE: Notion Document Detail (generic inline rendering) ──────────────
+
+function NotionDocPage({ pageId, title, onBack }) {
+  const { data, loading, error } = useNotionPage(pageId)
+
+  return (
+    <div>
+      <button onClick={onBack} style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+        background: 'none', border: 'none', color: '#6B1D38', fontSize: '0.875rem',
+        fontWeight: '500', cursor: 'pointer', marginBottom: '1rem', padding: '0.25rem 0',
+      }}>
+        <ChevronLeft size={16} /> Back
+      </button>
+
+      <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>{title}</h1>
+
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
+        {loading && <LoadingSpinner />}
+        {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
+        {data && data.blocks && <NotionBlocks blocks={data.blocks} />}
+        {data && (!data.blocks || data.blocks.length === 0) && !loading && (
+          <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No content available.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── PAGE: Mission ──────────────────────────────────────────────────────────
+
 function MissionPage() {
   return (
     <div>
@@ -1333,6 +1371,17 @@ export default function Portal({ meetings, boardMembers }) {
   const activeCommitteeKey = currentPage.startsWith('committee-') ? currentPage.replace('committee-', '') : null
 
   const renderPage = () => {
+    // Document detail (inline content from Notion)
+    if (currentPage === 'doc-detail') {
+      return (
+        <NotionDocPage
+          pageId={pageParams.docId}
+          title={pageParams.docTitle}
+          onBack={() => navigate(pageParams.backTo || 'dashboard')}
+        />
+      )
+    }
+
     // Meeting detail (inline content from Notion)
     if (currentPage === 'meeting-detail') {
       return (
@@ -1442,7 +1491,7 @@ export default function Portal({ meetings, boardMembers }) {
           <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
           <SidebarNavItem label="Strategic Plan" icon={Target} active={currentPage === 'strategic-plan'} onClick={() => navigate('strategic-plan')} />
 
-          {/* Reference Document Categories — each expands to show items */}
+          {/* Reference Document Categories */}
           {referenceDocuments.map((section) => (
             <div key={section.category}>
               <button
@@ -1464,25 +1513,26 @@ export default function Portal({ meetings, boardMembers }) {
                   transition: 'transform 0.15s', color: 'rgba(255,255,255,0.45)',
                 }} />
               </button>
-              {expandedRefCategories[section.category] && section.items.map((item, i) => (
-                <a
-                  key={i}
-                  href={item.notionUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    padding: '0.4rem 1rem 0.4rem 2.5rem', fontSize: '0.78rem',
-                    color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
-                    backgroundColor: 'transparent', transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#D4A843' }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
-                >
-                  {item.name}
-                  <ExternalLink size={10} style={{ opacity: 0.5, flexShrink: 0 }} />
-                </a>
-              ))}
+              {expandedRefCategories[section.category] && section.items.map((item, i) => {
+                const docId = extractNotionPageId(item.notionUrl)
+                return (
+                  <button
+                    key={i}
+                    onClick={() => navigate('doc-detail', { docId, docTitle: item.name, backTo: 'dashboard' })}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.4rem 1rem 0.4rem 2.5rem', fontSize: '0.78rem',
+                      color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
+                      backgroundColor: 'transparent', transition: 'all 0.15s',
+                      width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#D4A843' }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
+                  >
+                    {item.name}
+                  </button>
+                )
+              })}
             </div>
           ))}
 
