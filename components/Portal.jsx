@@ -976,10 +976,14 @@ function MembersPage({ boardMembers, onSelectMember }) {
 
 function getMemberType(member) {
   const pos = member.position || []
-  if (pos.some(p => p === 'Emeritus')) return 'Ex Officio'
   if (pos.some(p => p.startsWith('Non Board Member - Staff'))) return 'Staff'
   if (pos.some(p => p.startsWith('Non Board Member - Community'))) return 'Community'
   return 'Board Member'
+}
+
+function isExOfficio(member) {
+  const pos = member.position || []
+  return pos.some(p => p === 'Emeritus')
 }
 
 function getMemberDisplayRole(member) {
@@ -998,7 +1002,17 @@ function BoardMemberDirectoryPage({ boardMembers }) {
   const sorted = sortBoardMembers(boardMembers)
   const filtered = sorted.filter(m => {
     const type = getMemberType(m)
-    if (filterType !== 'all' && type !== filterType) return false
+    const exOff = isExOfficio(m)
+    // Type filter: Board Member filter includes ex officio
+    if (filterType !== 'all') {
+      if (filterType === 'Board Member') {
+        if (type !== 'Board Member') return false
+      } else {
+        if (type !== filterType && !exOff) return false
+        if (exOff) return false
+      }
+    }
+    // Search filter
     if (searchTerm) {
       const q = searchTerm.toLowerCase()
       return (
@@ -1010,9 +1024,23 @@ function BoardMemberDirectoryPage({ boardMembers }) {
     return true
   })
 
+  // Sort: board members first (non-ex-officio), then ex officio at bottom
+  const finalList = [...filtered].sort((a, b) => {
+    const aExOff = isExOfficio(a)
+    const bExOff = isExOfficio(b)
+    const aType = getMemberType(a)
+    const bType = getMemberType(b)
+    // Board members first, then ex officio, then staff/community
+    const order = (m, ex) => {
+      if (m === 'Board Member' && !ex) return 0
+      if (ex) return 1
+      return 2
+    }
+    return order(aType, aExOff) - order(bType, bExOff)
+  })
+
   const typeBadgeColors = {
     'Board Member': '#059669',
-    'Ex Officio': '#7C3AED',
     'Staff': '#2563EB',
     'Community': '#D97706',
   }
@@ -1044,7 +1072,7 @@ function BoardMemberDirectoryPage({ boardMembers }) {
           }} />
         </div>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
-          {['all', 'Board Member', 'Staff', 'Community', 'Ex Officio'].map(f => (
+          {['all', 'Board Member', 'Staff', 'Community'].map(f => (
             <button key={f} onClick={() => setFilterType(f)} style={filterBtnStyle(filterType === f)}>
               {f === 'all' ? 'All' : f}
             </button>
@@ -1056,6 +1084,7 @@ function BoardMemberDirectoryPage({ boardMembers }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+              <th style={{ ...thStyle, width: '2rem', textAlign: 'center' }}>#</th>
               <th style={thStyle}>Name</th>
               <th style={thStyle}>Type</th>
               <th style={thStyle}>Role</th>
@@ -1069,31 +1098,40 @@ function BoardMemberDirectoryPage({ boardMembers }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(m => {
-              const type = getMemberType(m)
-              const role = getMemberDisplayRole(m)
-              const badgeColor = typeBadgeColors[type] || '#6b7280'
-              const termDays = daysUntil(m.termEnd)
-              const termWarning = termDays >= 0 && termDays <= 365
-              return (
-                <tr key={m.id} style={{ backgroundColor: type !== 'Board Member' ? '#f9fafb' : 'white' }}>
-                  <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
-                  <td style={tdStyle}><Badge text={type} color={badgeColor} /></td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.committees?.join(', ') || '-'}</td>
-                  <td style={tdStyle}>
-                    {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
-                  </td>
-                  <td style={tdStyle}>
-                    {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
-                  </td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center' }}>{m.termCount || '-'}</td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termStart) || '-'}</td>
-                  <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap', color: termWarning ? '#DC2626' : '#374151', fontWeight: termWarning ? '600' : '400' }}>{formatDate(m.termEnd) || '-'}</td>
-                </tr>
-              )
-            })}
+            {(() => {
+              let boardNum = 0
+              return finalList.map(m => {
+                const type = getMemberType(m)
+                const exOff = isExOfficio(m)
+                const role = getMemberDisplayRole(m)
+                const isBoardMember = type === 'Board Member' && !exOff
+                if (isBoardMember) boardNum++
+                const displayType = exOff ? 'Ex Officio' : type
+                const badgeColor = exOff ? '#7C3AED' : (typeBadgeColors[type] || '#6b7280')
+                const termDays = daysUntil(m.termEnd)
+                const termWarning = termDays >= 0 && termDays <= 365
+                const isNonBoard = !isBoardMember
+                return (
+                  <tr key={m.id} style={{ backgroundColor: isNonBoard ? '#f9fafb' : 'white' }}>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center', color: '#9ca3af', fontWeight: '500' }}>{isBoardMember ? boardNum : ''}</td>
+                    <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
+                    <td style={tdStyle}><Badge text={displayType} color={badgeColor} /></td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.committees?.join(', ') || '-'}</td>
+                    <td style={tdStyle}>
+                      {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
+                    </td>
+                    <td style={tdStyle}>
+                      {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center' }}>{m.termCount || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termStart) || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap', color: termWarning ? '#DC2626' : '#374151', fontWeight: termWarning ? '600' : '400' }}>{formatDate(m.termEnd) || '-'}</td>
+                  </tr>
+                )
+              })
+            })()}
           </tbody>
         </table>
         {filtered.length === 0 && (
@@ -1102,8 +1140,8 @@ function BoardMemberDirectoryPage({ boardMembers }) {
       </div>
 
       <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
-        Showing {filtered.length} of {boardMembers.length} members.
-        Non-board rows (Staff, Community, Ex Officio) are shaded to distinguish them from voting board members.
+        Showing {finalList.length} of {boardMembers.length} members.
+        Board members are numbered. Ex officio, staff, and community rows are shaded.
       </p>
     </div>
   )
