@@ -1,4 +1,5 @@
 'use client'
+/* Portal v2.1 — transcription block support */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
