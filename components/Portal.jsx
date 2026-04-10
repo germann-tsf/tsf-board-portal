@@ -616,9 +616,13 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
   return (
     <div>
       <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Dashboard</h1>
-      <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '0.9rem' }}>
-        Welcome to the Thaddeus Stevens Foundation Board Portal. Serving our mission of supporting students and community since 1905.
-      </p>
+
+      {/* Mission Statement */}
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '1.5rem', marginBottom: '2rem', borderLeft: '4px solid #D4A843' }}>
+        <p style={{ fontSize: '1rem', lineHeight: '1.7', color: '#1f2937', fontStyle: 'italic', margin: 0 }}>
+          The Thaddeus Stevens Foundation supports the mission of Thaddeus Stevens College of Technology by raising funds and managing resources to provide scholarships, enhance educational programs, and improve campus facilities for students pursuing technical education.
+        </p>
+      </div>
 
       {/* Quick Access Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -1397,7 +1401,6 @@ export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
   const [selectedMember, setSelectedMember] = useState(null)
   const [boardOpen, setBoardOpen] = useState(true)
   const [committeesOpen, setCommitteesOpen] = useState(true)
-  const [expandedRefCategories, setExpandedRefCategories] = useState({})
 
   const navigate = useCallback((page, params = {}) => {
     setCurrentPage(page)
@@ -1429,6 +1432,49 @@ export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
           onBack={() => navigate(pageParams.backTo || 'dashboard')}
         />
       )
+    }
+
+    // Reference category pages (e.g., ref-Governance & Legal)
+    if (currentPage.startsWith('ref-')) {
+      const categoryName = currentPage.replace('ref-', '')
+      const section = referenceDocuments.find(s => s.category === categoryName)
+      if (section) {
+        return (
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <FileText size={28} style={{ color: '#2A4D6E' }} /> {section.category}
+            </h1>
+            <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+              {section.items.map((item, i) => {
+                const docId = extractNotionPageId(item.notionUrl)
+                return (
+                  <button
+                    key={i}
+                    onClick={() => navigate('doc-detail', { docId, docTitle: item.name, backTo: currentPage })}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      width: '100%', padding: '1rem 1.25rem',
+                      borderBottom: i < section.items.length - 1 ? '1px solid #e5e7eb' : 'none',
+                      backgroundColor: 'white', border: 'none', borderBottomStyle: 'solid',
+                      borderBottomWidth: i < section.items.length - 1 ? '1px' : '0',
+                      borderBottomColor: '#e5e7eb',
+                      cursor: 'pointer', textAlign: 'left', transition: 'background-color 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f9fafb' }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <FileText size={18} style={{ color: '#6B1D38', flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.95rem', fontWeight: '500', color: '#1f2937' }}>{item.name}</span>
+                    </div>
+                    <ChevronRight size={16} style={{ color: '#9ca3af' }} />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      }
     }
 
     // Committee pages
@@ -1528,49 +1574,15 @@ export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
           <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
 
 
-          {/* Reference Document Categories */}
+          {/* Reference Document Categories — flat links, content in main area */}
           {referenceDocuments.map((section) => (
-            <div key={section.category}>
-              <button
-                onClick={() => setExpandedRefCategories(prev => ({ ...prev, [section.category]: !prev[section.category] }))}
-                style={{
-                  width: '100%', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none',
-                  fontSize: '0.85rem', fontWeight: '400', color: 'rgba(255,255,255,0.75)',
-                  cursor: 'pointer', textAlign: 'left',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)' }}
-                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <FileText size={16} /> {section.category}
-                </span>
-                <ChevronDown size={14} style={{
-                  transform: expandedRefCategories[section.category] ? 'rotate(0deg)' : 'rotate(-90deg)',
-                  transition: 'transform 0.15s', color: 'rgba(255,255,255,0.45)',
-                }} />
-              </button>
-              {expandedRefCategories[section.category] && section.items.map((item, i) => {
-                const docId = extractNotionPageId(item.notionUrl)
-                return (
-                  <button
-                    key={i}
-                    onClick={() => navigate('doc-detail', { docId, docTitle: item.name, backTo: 'dashboard' })}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '0.5rem',
-                      padding: '0.4rem 1rem 0.4rem 2.5rem', fontSize: '0.78rem',
-                      color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
-                      backgroundColor: 'transparent', transition: 'all 0.15s',
-                      width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#D4A843' }}
-                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
-                  >
-                    {item.name}
-                  </button>
-                )
-              })}
-            </div>
+            <SidebarNavItem
+              key={section.category}
+              label={section.category}
+              icon={FileText}
+              active={currentPage === `ref-${section.category}`}
+              onClick={() => navigate(`ref-${section.category}`)}
+            />
           ))}
 
           <a href="https://drive.google.com/file/d/1uQDW24Ud6Zg26WHpZIX-Le91md4mIuYY/view" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
