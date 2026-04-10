@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
-import { fetchMeetings, fetchBoardMembers } from '@/lib/notion'
+import { fetchMeetings, fetchBoardMembers, fetchActionPlan } from '@/lib/notion'
 
 export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 export async function GET(request) {
   try {
     // Fetch independently so one failure doesn't block the other
-    const [meetingsResult, membersResult] = await Promise.allSettled([
+    const [meetingsResult, membersResult, actionPlanResult] = await Promise.allSettled([
       fetchMeetings(),
       fetchBoardMembers(),
+      fetchActionPlan(),
     ])
 
     const errors = []
@@ -31,6 +32,7 @@ export async function GET(request) {
     return NextResponse.json({
       meetings: meetingsResult.status === 'fulfilled' ? meetingsResult.value : [],
       boardMembers: membersResult.status === 'fulfilled' ? membersResult.value : [],
+      actionPlan: actionPlanResult.status === 'fulfilled' ? actionPlanResult.value : [],
       warnings: errors.length ? errors : undefined,
     })
   } catch (error) {

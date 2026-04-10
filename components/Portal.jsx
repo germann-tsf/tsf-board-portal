@@ -22,6 +22,11 @@ import {
   Shield,
   Target,
   Loader2,
+  MapPin,
+  Globe,
+  CheckCircle2,
+  Circle,
+  Clock as ClockIcon,
 } from 'lucide-react'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────
@@ -132,33 +137,6 @@ const referenceDocuments = [
   },
 ]
 
-const quickLinks = [
-  {
-    section: 'Board Portal (Notion)',
-    links: [
-      { name: 'Board Portal Home', url: 'https://www.notion.so/32a84a2d469081fc8ffed4169cfe75ec', description: 'Main board portal landing page' },
-      { name: 'Board of Directors', url: 'https://www.notion.so/32a84a2d469081908551e314d9377091', description: 'Agendas & minutes' },
-      { name: 'Executive Committee', url: 'https://www.notion.so/32a84a2d469081d085aad5c8119e3d16', description: 'Agendas & minutes' },
-      { name: 'Governance Committee', url: 'https://www.notion.so/32a84a2d469081cb8209fd2f43b8c4d6', description: 'Agendas & minutes' },
-      { name: 'Finance Committee', url: 'https://www.notion.so/32a84a2d469081da9b84c0493ba83575', description: 'Agendas & minutes' },
-      { name: 'Fundraising Committee', url: 'https://www.notion.so/32a84a2d469081a5a2b4effe5bf762b4', description: 'Agendas & minutes' },
-      { name: 'Student Home Construction Committee', url: 'https://www.notion.so/32a84a2d469081089910eeb3329fd212', description: 'Agendas & minutes' },
-    ],
-  },
-  {
-    section: 'Governance & Policies',
-    links: [
-      { name: 'Governance & Policies', url: 'https://www.notion.so/32a84a2d4690813c8eb7e6084d26a830', description: 'Bylaws, COI policy, board agreements' },
-      { name: 'Reports & Financials', url: 'https://www.notion.so/32a84a2d469081c8bd35d4d17a66c291', description: 'Audits, 990s, budgets' },
-    ],
-  },
-  {
-    section: 'Contact',
-    links: [
-      { name: 'Jenny Germann', url: 'mailto:germann@stevenscollege.edu', description: 'Executive Director, portal questions' },
-    ],
-  },
-]
 
 const quorumTable = [
   { size: '14-15 members', quorum: 8 },
@@ -633,7 +611,7 @@ function extractNotionPageId(notionUrl) {
 
 // ─── PAGE: Dashboard ────────────────────────────────────────────────────
 
-function DashboardPage({ meetings, boardMembers, onNavigate }) {
+function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
 
   return (
     <div>
@@ -693,6 +671,74 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
           </div>
         </button>
       </div>
+
+      {/* Strategic Action Plan */}
+      {actionPlan && actionPlan.length > 0 && (() => {
+        const goalOrder = ['Goal 1: Raise $5M Annually', 'Goal 2: Board Excellence', 'Goal 3: Three-Board Collaboration', 'Goal 4: SHCP 10-Year Plan']
+        const grouped = {}
+        actionPlan.forEach(item => {
+          const g = item.goal || 'Other'
+          if (!grouped[g]) grouped[g] = []
+          grouped[g].push(item)
+        })
+        const sortedGoals = Object.keys(grouped).sort((a, b) => {
+          const ai = goalOrder.indexOf(a)
+          const bi = goalOrder.indexOf(b)
+          return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+        })
+        const statusDot = (status) => {
+          if (status === 'Done') return { color: '#16a34a', label: 'Done' }
+          if (status === 'In progress') return { color: '#2563eb', label: 'In progress' }
+          return { color: '#9ca3af', label: 'Not started' }
+        }
+        const goalColors = ['#6B1D38', '#2A4D6E', '#D4A843', '#4a7c59']
+        return (
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
+            <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Target size={16} /> Strategic Action Plan
+            </div>
+            <div style={{ padding: '1rem' }}>
+              {sortedGoals.map((goal, gi) => {
+                const items = grouped[goal]
+                const doneCount = items.filter(i => i.status === 'Done').length
+                const total = items.length
+                const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0
+                const gColor = goalColors[gi % goalColors.length]
+                return (
+                  <div key={goal} style={{ marginBottom: gi < sortedGoals.length - 1 ? '1.25rem' : 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h3 style={{ fontSize: '0.85rem', fontWeight: '700', color: gColor, margin: 0 }}>{goal}</h3>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>{doneCount}/{total} complete ({pct}%)</span>
+                    </div>
+                    <div style={{ backgroundColor: '#f3f4f6', borderRadius: '999px', height: '6px', marginBottom: '0.75rem', overflow: 'hidden' }}>
+                      <div style={{ backgroundColor: gColor, height: '100%', borderRadius: '999px', width: `${pct}%`, transition: 'width 0.3s' }} />
+                    </div>
+                    {items.map(item => {
+                      const dot = statusDot(item.status)
+                      return (
+                        <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', padding: '0.4rem 0', borderBottom: '1px solid #f3f4f6' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: dot.color, flexShrink: 0, marginTop: '4px' }} title={dot.label} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: '0.82rem', fontWeight: '500', color: '#1f2937', margin: 0, lineHeight: '1.3' }}>{item.actionItem}</p>
+                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
+                              {item.owner && <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>{item.owner}</span>}
+                              {item.committee && <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{item.committee}</span>}
+                              {item.targetDate && <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{item.targetDate}</span>}
+                            </div>
+                            {item.progressNotes && (
+                              <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '0.15rem 0 0 0', fontStyle: 'italic' }}>{item.progressNotes}</p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Upcoming & Past Meetings */}
       {(() => {
@@ -1345,7 +1391,7 @@ function LinksPage() {
 
 // ─── MAIN PORTAL COMPONENT ─────────────────────────────────────────────
 
-export default function Portal({ meetings, boardMembers }) {
+export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
@@ -1396,7 +1442,7 @@ export default function Portal({ meetings, boardMembers }) {
 
     switch (currentPage) {
       case 'dashboard':
-        return <DashboardPage meetings={meetings} boardMembers={boardMembers} onNavigate={(page, params) => navigate(page, { ...params, backTo: 'dashboard' })} />
+        return <DashboardPage meetings={meetings} boardMembers={boardMembers} actionPlan={actionPlan} onNavigate={(page, params) => navigate(page, { ...params, backTo: 'dashboard' })} />
       case 'members':
         return <MembersPage boardMembers={boardMembers} onSelectMember={setSelectedMember} />
       case 'board-directory':
@@ -1410,7 +1456,7 @@ export default function Portal({ meetings, boardMembers }) {
       case 'reference':
         return <ReferencePage />
       case 'links':
-        return <LinksPage />
+        return null
       default:
         return null
     }
@@ -1527,7 +1573,12 @@ export default function Portal({ meetings, boardMembers }) {
             </div>
           ))}
 
-          <SidebarNavItem label="Quick Links" icon={Link2} active={currentPage === 'links'} onClick={() => navigate('links')} />
+          <a href="https://drive.google.com/file/d/1uQDW24Ud6Zg26WHpZIX-Le91md4mIuYY/view" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+            <SidebarNavItem label="Campus Map" icon={MapPin} active={false} onClick={() => {}} />
+          </a>
+          <a href="https://www.stevenscollege.edu" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+            <SidebarNavItem label="TSCT Website" icon={Globe} active={false} onClick={() => {}} />
+          </a>
         </div>
 
         {/* Footer */}
