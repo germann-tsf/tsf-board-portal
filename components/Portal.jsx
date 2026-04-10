@@ -1,4 +1,5 @@
 'use client'
+/* Portal v2.1 — transcription block support */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
@@ -79,29 +80,54 @@ const committeeConfig = [
 const BYLAWS_PAGE_ID = '33484a2d-4690-80e3-b5a9-d01377e16519'
 const STRATEGIC_PLAN_PAGE_ID = '32a84a2d-4690-81e8-ba32-cea4fc59a5e1'
 
+const FOUNDATIONAL_DOCS_NOTION_URL = 'https://www.notion.so/Foundational-Documents-33b84a2d4690816493d2e0f50f25c440'
+
+// Each category points directly to the Foundational Documents page which has
+// all documents organized with headings, toggles, and file blocks.
+// Individual items within categories that have dedicated parent pages point
+// to those parents (which contain the file download blocks).
+const FOUNDATIONAL_DOCS_PAGE_ID = '33b84a2d4690816493d2e0f50f25c440'
+
 const referenceDocuments = [
   {
-    category: 'Foundational Documents',
+    category: 'Governance & Legal',
     items: [
-      { name: 'Articles of Incorporation', status: 'Current', lastReviewed: 'Sep 19, 2014', notionUrl: 'https://www.notion.so/33484a2d4690806ebaf3f1b430496b32' },
-      { name: 'IRS Determination Letter (501c3)', status: 'Current', lastReviewed: '2003', notionUrl: 'https://www.notion.so/33484a2d469080659518d3cdb213e2ac' },
+      { name: 'Articles of Incorporation; IRS Letter; MOU', notionUrl: 'https://www.notion.so/70fd1c99bc6042c8b364afdd841e82b9' },
+      { name: 'Bylaws', notionUrl: 'https://www.notion.so/33b84a2d46908053bd68c962067ba6f2' },
+    ],
+  },
+  {
+    category: 'Strategy & Planning',
+    items: [
+      { name: 'Strategic Plans & Action Plan', notionUrl: 'https://www.notion.so/31c94b116fc34bba9ea05a811211ffd7' },
+    ],
+  },
+  {
+    category: 'Financial Records',
+    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
+    items: [
+      { name: 'All Financial Records', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
     ],
   },
   {
     category: 'Policies',
+    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
     items: [
-      { name: 'Conflict of Interest Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
-      { name: 'Whistleblower Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
-      { name: 'Document Retention Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
-      { name: 'Gift Acceptance Policy', status: 'Current', lastReviewed: '', notionUrl: '' },
+      { name: 'All Policies', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
     ],
   },
   {
-    category: 'Board Member Resources',
+    category: 'Insurance',
+    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
     items: [
-      { name: 'Board Member Agreement', status: '', lastReviewed: 'Sign and return to ED', notionUrl: '' },
-      { name: 'Board Orientation Packet', status: '', lastReviewed: 'For new members', notionUrl: '' },
-      { name: 'Org Chart', status: '', lastReviewed: 'Current staff structure', notionUrl: '' },
+      { name: 'All Insurance Documents', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
+    ],
+  },
+  {
+    category: 'Reports & Resources',
+    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
+    items: [
+      { name: 'All Reports & Resources', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
     ],
   },
 ]
@@ -157,16 +183,29 @@ function getMemberCommittees(member) {
 
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────────────────
 
+function parseLocalDate(dateString) {
+  if (!dateString) return null
+  // Notion dates like '2026-04-14' are date-only (no time). new Date() parses
+  // them as UTC midnight, which shifts back a day in US timezones. Split and
+  // construct as local to avoid the off-by-one.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [y, m, d] = dateString.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+  return new Date(dateString)
+}
+
 function formatDate(dateString) {
   if (!dateString) return ''
-  const date = new Date(dateString)
+  const date = parseLocalDate(dateString)
+  if (!date) return ''
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function getNextMeeting(meetings) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const futureMeetings = meetings.filter(m => m.date && new Date(m.date) >= today)
+  const futureMeetings = meetings.filter(m => m.date && parseLocalDate(m.date) >= today)
   if (futureMeetings.length === 0) return null
   return futureMeetings[futureMeetings.length - 1]
 }
@@ -190,7 +229,7 @@ function getCommitteeMembers(committeeName, boardMembers) {
 
 function daysUntil(dateString) {
   if (!dateString) return Infinity
-  const target = new Date(dateString)
+  const target = parseLocalDate(dateString)
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   target.setHours(0, 0, 0, 0)
@@ -405,6 +444,21 @@ function NotionBlocks({ blocks }) {
                 </table>
               </div>
             )
+          case 'transcription':
+            return (
+              <div key={idx} style={{ margin: '1.5rem 0', borderTop: '2px solid #6B1D38', paddingTop: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#6B1D38', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={20} /> Meeting Minutes
+                </h2>
+                {block.text && block.text.length > 0 && (
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 1rem 0', fontStyle: 'italic' }}><RichText segments={block.text} /></p>
+                )}
+                {block.children && block.children.length > 0 && <NotionBlocks blocks={block.children} />}
+                {(!block.children || block.children.length === 0) && (
+                  <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.9rem' }}>Meeting minutes are being prepared.</p>
+                )}
+              </div>
+            )
           case 'child_page':
             return (
               <div key={idx} style={{ margin: '0.5rem 0', padding: '0.5rem 1rem', backgroundColor: '#f9fafb', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: '#374151' }}>
@@ -467,7 +521,8 @@ function MemberCard({ member, onSelect }) {
         )}
       </div>
       {member.employer && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0' }}><strong>Employer:</strong> {member.employer}</p>}
-      {member.email && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0' }}><strong>Email:</strong> {member.email}</p>}
+      {member.email && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Mail size={14} /> <a href={`mailto:${member.email}`} style={{ color: '#6b7280', textDecoration: 'none' }}>{member.email}</a></p>}
+      {member.cell && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Phone size={14} /> <a href={`tel:${member.cell}`} style={{ color: '#6b7280', textDecoration: 'none' }}>{member.cell}</a></p>}
     </div>
   )
 }
@@ -569,14 +624,16 @@ function useNotionPage(pageId) {
   return { data, loading, error }
 }
 
+// Extract Notion page ID from URL (e.g., "https://www.notion.so/33484a2d4690806ebaf3f1b430496b32" -> "33484a2d4690806ebaf3f1b430496b32")
+function extractNotionPageId(notionUrl) {
+  if (!notionUrl) return null
+  const match = notionUrl.match(/notion\.so\/([a-zA-Z0-9]+)/)
+  return match ? match[1] : null
+}
+
 // ─── PAGE: Dashboard ────────────────────────────────────────────────────
 
 function DashboardPage({ meetings, boardMembers, onNavigate }) {
-  const nextMeeting = getNextMeeting(meetings)
-  const expiringCount = boardMembers.filter(m => {
-    const d = daysUntil(m.termEnd)
-    return d >= 0 && d <= 365
-  }).length
 
   return (
     <div>
@@ -585,64 +642,119 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
         Welcome to the Thaddeus Stevens Foundation Board Portal. Serving our mission of supporting students and community since 1905.
       </p>
 
-      {/* Stats */}
+      {/* Quick Access Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <StatCard icon={Users} title="Board Members" value={boardMembers.length} color="#6B1D38" />
-        <StatCard icon={Calendar} title="Total Meetings" value={meetings.length} color="#2A4D6E" />
-        <StatCard icon={Building2} title="Committees" value={committeeConfig.length} color="#B8860B" />
-        {expiringCount > 0 && <StatCard icon={AlertTriangle} title="Terms Expiring (12 mo)" value={expiringCount} color="#DC2626" />}
+        <button onClick={() => onNavigate('bylaws')} style={{
+          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
+          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#6B1D38'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
+        >
+          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#6B1D3820', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B1D38', flexShrink: 0 }}>
+            <Shield size={20} />
+          </div>
+          <div>
+            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Bylaws</p>
+            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>Governing document</p>
+          </div>
+        </button>
+        <button onClick={() => onNavigate('strategic-plan')} style={{
+          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
+          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#2A4D6E'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
+        >
+          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#2A4D6E20', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2A4D6E', flexShrink: 0 }}>
+            <Target size={20} />
+          </div>
+          <div>
+            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Strategic Plan</p>
+            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>2024–2027 plan</p>
+          </div>
+        </button>
+        <button onClick={() => onNavigate('mission')} style={{
+          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
+          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#D4A843'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
+        >
+          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#D4A84320', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4A843', flexShrink: 0 }}>
+            <BookOpen size={20} />
+          </div>
+          <div>
+            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Mission</p>
+            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>Our purpose</p>
+          </div>
+        </button>
       </div>
 
-      {/* Next Meeting */}
-      {nextMeeting && (
-        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
-          <div style={{ background: 'linear-gradient(135deg, #6B1D38, #8B2D52)', color: 'white', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Calendar size={20} />
-            <span style={{ fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Next Meeting</span>
-          </div>
-          <div style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.75rem' }}>{nextMeeting.title}</h3>
-            <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar size={16} style={{ color: '#6B1D38' }} />
-                <span style={{ fontSize: '0.9rem', color: '#374151' }}>{formatDate(nextMeeting.date)}</span>
-              </div>
-            </div>
-            <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title, published: nextMeeting.published })} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.75rem 1.25rem', backgroundColor: '#6B1D38', color: 'white',
-              border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem',
-              fontWeight: '600', cursor: 'pointer',
-            }}>
-              View Agenda & Documents <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Upcoming & Past Meetings */}
+      {(() => {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const upcoming = meetings.filter(m => m.date && parseLocalDate(m.date) >= today).reverse()
+        const past = meetings.filter(m => m.date && parseLocalDate(m.date) < today).slice(0, 6)
 
-      {/* Recent Meetings */}
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Recent Meetings
-        </div>
-        <div>
-          {meetings.slice(0, 8).map(meeting => (
-            <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
+        return (
+          <>
+            {upcoming.length > 0 && (
+              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
+                <div style={{ backgroundColor: '#6B1D38', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Upcoming Meetings
+                </div>
+                <div>
+                  {upcoming.map(meeting => (
+                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
+                      </div>
+                      <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title, published: meeting.published })} style={{
+                        padding: '0.4rem 0.75rem', backgroundColor: '#fdf2f5', border: '1px solid #6B1D3840',
+                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#6B1D38',
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>
+                        View Agenda & Minutes
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title })} style={{
-                padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
-                borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}>
-                View Details
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+            )}
+
+            {past.length > 0 && (
+              <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Past Meetings
+                </div>
+                <div>
+                  {past.map(meeting => (
+                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
+                      </div>
+                      <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title, published: meeting.published })} style={{
+                        padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151',
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>
+                        View Agenda & Minutes
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })()}
     </div>
   )
 }
@@ -652,8 +764,9 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
 function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }) {
   const committeeMeetings = meetings.filter(m => m.committee === committee.name)
   const nextMeeting = getNextMeeting(committeeMeetings)
-  const pastMeetings = committeeMeetings.filter(m => !m.date || new Date(m.date) < new Date())
-  const futureMeetings = committeeMeetings.filter(m => m.date && new Date(m.date) >= new Date()).reverse()
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  const pastMeetings = committeeMeetings.filter(m => !m.date || parseLocalDate(m.date) < now)
+  const futureMeetings = committeeMeetings.filter(m => m.date && parseLocalDate(m.date) >= now).reverse()
   const members = getCommitteeMembers(committee.name, boardMembers)
 
   return (
@@ -715,7 +828,6 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
-                  {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
                 </div>
                 <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
@@ -723,7 +835,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
                 padding: '0.4rem 0.75rem', backgroundColor: m.published ? '#f9fafb' : '#f9fafb', border: '1px solid #d1d5db',
                 borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
               }}>
-                {m.published ? 'View Agenda' : 'View Details'}
+                View Agenda & Minutes
               </button>
             </div>
           ))}
@@ -743,7 +855,6 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
-                  {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
                 </div>
                 <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
@@ -751,7 +862,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
                 padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
                 borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
               }}>
-                {m.published ? 'View Minutes' : 'View Details'}
+                View Agenda & Minutes
               </button>
             </div>
           ))
@@ -859,69 +970,271 @@ function MembersPage({ boardMembers, onSelectMember }) {
   )
 }
 
-// ─── PAGE: Term Expirations ─────────────────────────────────────────────
+// ─── PAGE: Board Member Directory ──────────────────────────────────────
 
-function TermExpirationPage({ boardMembers }) {
-  const membersWithTerms = sortBoardMembers(boardMembers)
-    .filter(m => m.termEnd)
-    .sort((a, b) => new Date(a.termEnd) - new Date(b.termEnd))
+function getMemberType(member) {
+  const pos = member.position || []
+  if (pos.some(p => p.startsWith('Non Board Member - Staff'))) return 'Staff'
+  if (pos.some(p => p.startsWith('Non Board Member - Community'))) return 'Community'
+  return 'Board Member'
+}
 
-  const getUrgencyColor = (days) => {
-    if (days < 0) return '#DC2626'
-    if (days <= 90) return '#EA580C'
-    if (days <= 180) return '#D97706'
-    if (days <= 365) return '#2563EB'
-    return '#059669'
+function isExOfficio(member) {
+  const pos = member.position || []
+  return pos.some(p => p === 'Emeritus')
+}
+
+function getMemberDisplayRole(member) {
+  const pos = member.position || []
+  const leadership = pos.filter(p =>
+    !p.startsWith('Non Board Member') && p !== 'Board Member' && p !== 'Emeritus'
+  )
+  if (leadership.length > 0) return leadership.join(', ')
+  return null
+}
+
+function BoardMemberDirectoryPage({ boardMembers }) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState('all')
+  const [filterCommittee, setFilterCommittee] = useState('all')
+
+  // Collect all unique committee names for filter tabs
+  const allCommittees = useMemo(() => {
+    const set = new Set()
+    boardMembers.forEach(m => {
+      (m.committees || []).forEach(c => set.add(c))
+    })
+    return Array.from(set).sort()
+  }, [boardMembers])
+
+  const sorted = sortBoardMembers(boardMembers)
+  const filtered = sorted.filter(m => {
+    const type = getMemberType(m)
+    const exOff = isExOfficio(m)
+    // Type filter: Board Member filter includes ex officio
+    if (filterType !== 'all') {
+      if (filterType === 'Board Member') {
+        if (type !== 'Board Member') return false
+      } else {
+        if (type !== filterType && !exOff) return false
+        if (exOff) return false
+      }
+    }
+    // Committee filter
+    if (filterCommittee !== 'all') {
+      if (!(m.committees || []).includes(filterCommittee)) return false
+    }
+    // Search filter
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase()
+      return (
+        m.name?.toLowerCase().includes(q) ||
+        m.employer?.toLowerCase().includes(q) ||
+        m.committees?.some(c => c.toLowerCase().includes(q))
+      )
+    }
+    return true
+  })
+
+  // Sort: board members first (non-ex-officio), then ex officio at bottom
+  const finalList = [...filtered].sort((a, b) => {
+    const aExOff = isExOfficio(a)
+    const bExOff = isExOfficio(b)
+    const aType = getMemberType(a)
+    const bType = getMemberType(b)
+    // Board members first, then ex officio, then staff/community
+    const order = (m, ex) => {
+      if (m === 'Board Member' && !ex) return 0
+      if (ex) return 1
+      return 2
+    }
+    return order(aType, aExOff) - order(bType, bExOff)
+  })
+
+  const typeBadgeColors = {
+    'Board Member': '#059669',
+    'Staff': '#2563EB',
+    'Community': '#D97706',
   }
 
-  const getUrgencyLabel = (days) => {
-    if (days < 0) return 'Expired'
-    if (days <= 90) return 'Expiring Soon'
-    if (days <= 180) return 'Within 6 Months'
-    if (days <= 365) return 'Within 1 Year'
-    return 'Active'
-  }
+  const thStyle = { textAlign: 'left', padding: '0.75rem 0.75rem', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', whiteSpace: 'nowrap' }
+  const tdStyle = { padding: '0.6rem 0.75rem', fontSize: '0.85rem', color: '#374151', borderBottom: '1px solid #e5e7eb' }
+
+  const filterBtnStyle = (active) => ({
+    padding: '0.4rem 0.75rem', fontSize: '0.8rem', fontWeight: active ? '600' : '400',
+    border: active ? '1px solid #6B1D38' : '1px solid #d1d5db', borderRadius: '0.375rem',
+    backgroundColor: active ? '#6B1D38' : 'white', color: active ? 'white' : '#374151',
+    cursor: 'pointer',
+  })
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Term Expirations</h1>
-      <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '0.9rem' }}>Board member terms sorted by expiration date. Members whose terms are expiring soon are highlighted.</p>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Member Directory</h1>
+      <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+        All current board members, ex officio, staff, and community committee members.
+      </p>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1', maxWidth: '300px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+          <input type="text" placeholder="Search name, employer, committee..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{
+            width: '100%', padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+            border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.85rem', fontFamily: 'inherit', boxSizing: 'border-box',
+          }} />
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          {['all', 'Board Member', 'Staff', 'Community'].map(f => (
+            <button key={f} onClick={() => setFilterType(f)} style={filterBtnStyle(filterType === f)}>
+              {f === 'all' ? 'All' : f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Committee filter tabs */}
+      {allCommittees.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '500', alignSelf: 'center', marginRight: '0.25rem' }}>Committee:</span>
+          <button onClick={() => setFilterCommittee('all')} style={{
+            padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
+            border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+            backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
+            cursor: 'pointer',
+          }}>All</button>
+          {allCommittees.map(c => (
+            <button key={c} onClick={() => setFilterCommittee(c)} style={{
+              padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === c ? '600' : '400',
+              border: filterCommittee === c ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+              backgroundColor: filterCommittee === c ? '#2A4D6E' : 'white', color: filterCommittee === c ? 'white' : '#374151',
+              cursor: 'pointer',
+            }}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Member</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Position</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Term Start</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Term End</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Term</th>
-              <th style={{ textAlign: 'left', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
+              <th style={{ ...thStyle, width: '2rem', textAlign: 'center' }}>#</th>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Type</th>
+              <th style={thStyle}>Role</th>
+              <th style={thStyle}>Employer</th>
+              <th style={thStyle}>Committee(s)</th>
+              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Phone</th>
+              <th style={thStyle}>Term #</th>
+              <th style={thStyle}>Term Start</th>
+              <th style={thStyle}>Term End</th>
             </tr>
           </thead>
           <tbody>
-            {membersWithTerms.map(m => {
-              const days = daysUntil(m.termEnd)
-              const color = getUrgencyColor(days)
-              const label = getUrgencyLabel(days)
-              return (
-                <tr key={m.id} style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: days <= 90 ? color + '08' : 'white' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>{m.name}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{m.position?.join(', ') || 'Board Member'}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{formatDate(m.termStart)}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: color, fontWeight: '500' }}>{formatDate(m.termEnd)}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{m.termCount || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem' }}>
-                    <Badge text={label} color={color} />
-                  </td>
-                </tr>
-              )
-            })}
+            {(() => {
+              let boardNum = 0
+              return finalList.map(m => {
+                const type = getMemberType(m)
+                const exOff = isExOfficio(m)
+                const role = getMemberDisplayRole(m)
+                const isBoardMember = type === 'Board Member' && !exOff
+                if (isBoardMember) boardNum++
+                const displayType = exOff ? 'Ex Officio' : type
+                const badgeColor = exOff ? '#7C3AED' : (typeBadgeColors[type] || '#6b7280')
+                const termDays = daysUntil(m.termEnd)
+                const termWarning = termDays >= 0 && termDays <= 365
+                const isNonBoard = !isBoardMember
+                return (
+                  <tr key={m.id} style={{ backgroundColor: isNonBoard ? '#f9fafb' : 'white' }}>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center', color: '#9ca3af', fontWeight: '500' }}>{isBoardMember ? boardNum : ''}</td>
+                    <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
+                    <td style={tdStyle}><Badge text={displayType} color={badgeColor} /></td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.committees?.join(', ') || '-'}</td>
+                    <td style={tdStyle}>
+                      {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
+                    </td>
+                    <td style={tdStyle}>
+                      {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center' }}>{m.termCount || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termStart) || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap', color: termWarning ? '#DC2626' : '#374151', fontWeight: termWarning ? '600' : '400' }}>{formatDate(m.termEnd) || '-'}</td>
+                  </tr>
+                )
+              })
+            })()}
           </tbody>
         </table>
-        {membersWithTerms.length === 0 && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No term data available.</div>
+        {filtered.length === 0 && (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No members found.</div>
         )}
+      </div>
+
+      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
+        Showing {finalList.length} of {boardMembers.length} members.
+        Board members are numbered. Ex officio, staff, and community rows are shaded.
+      </p>
+    </div>
+  )
+}
+
+// ─── PAGE: Mission ─────────────────────────────────────────────────────
+
+// ─── PAGE: Notion Document Detail (generic inline rendering) ──────────────
+
+function NotionDocPage({ pageId, title, onBack }) {
+  const { data, loading, error } = useNotionPage(pageId)
+
+  return (
+    <div>
+      <button onClick={onBack} style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+        background: 'none', border: 'none', color: '#6B1D38', fontSize: '0.875rem',
+        fontWeight: '500', cursor: 'pointer', marginBottom: '1rem', padding: '0.25rem 0',
+      }}>
+        <ChevronLeft size={16} /> Back
+      </button>
+
+      <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>{title}</h1>
+
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
+        {loading && <LoadingSpinner />}
+        {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
+        {data && data.blocks && <NotionBlocks blocks={data.blocks} />}
+        {data && (!data.blocks || data.blocks.length === 0) && !loading && (
+          <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No content available.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── PAGE: Mission ──────────────────────────────────────────────────────────
+
+function MissionPage() {
+  return (
+    <div>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <BookOpen size={28} style={{ color: '#D4A843' }} /> Our Mission
+      </h1>
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2.5rem' }}>
+        <div style={{ borderLeft: '4px solid #D4A843', paddingLeft: '1.5rem', marginBottom: '2rem' }}>
+          <p style={{ fontSize: '1.2rem', lineHeight: '1.8', color: '#1f2937', fontStyle: 'italic', margin: 0 }}>
+            The Thaddeus Stevens Foundation supports the mission of Thaddeus Stevens College of Technology by raising funds and managing resources to provide scholarships, enhance educational programs, and improve campus facilities for students pursuing technical education.
+          </p>
+        </div>
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#6B1D38', marginBottom: '1rem' }}>Our Purpose</h3>
+          <p style={{ fontSize: '0.95rem', lineHeight: '1.7', color: '#374151', margin: '0 0 1.5rem 0' }}>
+            Founded in 1905, the Thaddeus Stevens Foundation serves as the fundraising and asset management arm of Thaddeus Stevens College of Technology. The Foundation is a 501(c)(3) nonprofit organization governed by a volunteer Board of Directors committed to ensuring that students have access to high-quality technical education and the support they need to succeed.
+          </p>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#6B1D38', marginBottom: '1rem' }}>What We Do</h3>
+          <p style={{ fontSize: '0.95rem', lineHeight: '1.7', color: '#374151', margin: 0 }}>
+            The Foundation raises and stewards charitable gifts, manages endowment and investment funds, awards scholarships, funds campus improvement projects, and supports programs that strengthen student outcomes. The Board of Directors provides fiduciary oversight and strategic guidance to advance the Foundation's mission in partnership with the College.
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -1036,7 +1349,9 @@ export default function Portal({ meetings, boardMembers }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
+  const [boardOpen, setBoardOpen] = useState(true)
   const [committeesOpen, setCommitteesOpen] = useState(true)
+  const [expandedRefCategories, setExpandedRefCategories] = useState({})
 
   const navigate = useCallback((page, params = {}) => {
     setCurrentPage(page)
@@ -1047,6 +1362,17 @@ export default function Portal({ meetings, boardMembers }) {
   const activeCommitteeKey = currentPage.startsWith('committee-') ? currentPage.replace('committee-', '') : null
 
   const renderPage = () => {
+    // Document detail (inline content from Notion)
+    if (currentPage === 'doc-detail') {
+      return (
+        <NotionDocPage
+          pageId={pageParams.docId}
+          title={pageParams.docTitle}
+          onBack={() => navigate(pageParams.backTo || 'dashboard')}
+        />
+      )
+    }
+
     // Meeting detail (inline content from Notion)
     if (currentPage === 'meeting-detail') {
       return (
@@ -1073,8 +1399,10 @@ export default function Portal({ meetings, boardMembers }) {
         return <DashboardPage meetings={meetings} boardMembers={boardMembers} onNavigate={(page, params) => navigate(page, { ...params, backTo: 'dashboard' })} />
       case 'members':
         return <MembersPage boardMembers={boardMembers} onSelectMember={setSelectedMember} />
-      case 'term-expirations':
-        return <TermExpirationPage boardMembers={boardMembers} />
+      case 'board-directory':
+        return <BoardMemberDirectoryPage boardMembers={boardMembers} />
+      case 'mission':
+        return <MissionPage />
       case 'bylaws':
         return <NotionContentPage pageId={BYLAWS_PAGE_ID} title="Bylaws" icon={<Shield size={28} style={{ color: '#6B1D38' }} />} />
       case 'strategic-plan':
@@ -1107,10 +1435,28 @@ export default function Portal({ meetings, boardMembers }) {
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '0.5rem' }}>
           {/* Top Level */}
           <SidebarNavItem label="Dashboard" icon={LayoutDashboard} active={currentPage === 'dashboard'} onClick={() => navigate('dashboard')} />
-          <SidebarNavItem label="Board Members" icon={Users} active={currentPage === 'members'} onClick={() => navigate('members')} />
-          <SidebarNavItem label="Term Expirations" icon={Clock} active={currentPage === 'term-expirations'} onClick={() => navigate('term-expirations')} />
 
-          <SidebarNavItem label="Board Meetings" icon={Calendar} active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} />
+          {/* Collapsible Board of Directors */}
+          <button onClick={() => setBoardOpen(!boardOpen)} style={{
+            width: '100%', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none',
+            fontSize: '0.85rem', fontWeight: '400', color: 'rgba(255,255,255,0.75)',
+            cursor: 'pointer',
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Users size={16} /> Board of Directors
+            </span>
+            <ChevronDown size={14} style={{
+              transform: boardOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+              transition: 'transform 0.15s', color: 'rgba(255,255,255,0.45)',
+            }} />
+          </button>
+          {boardOpen && (
+            <>
+              <SidebarNavItem label="Board Directory" active={currentPage === 'board-directory'} onClick={() => navigate('board-directory')} indent />
+              <SidebarNavItem label="Board Meetings" active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} indent />
+            </>
+          )}
 
           {/* Collapsible Committees */}
           <button onClick={() => setCommitteesOpen(!committeesOpen)} style={{
@@ -1134,8 +1480,53 @@ export default function Portal({ meetings, boardMembers }) {
           {/* Resources Section */}
           <SectionLabel>Resources</SectionLabel>
           <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
-          <SidebarNavItem label="Strategic Plan" icon={Target} active={currentPage === 'strategic-plan'} onClick={() => navigate('strategic-plan')} />
-          <SidebarNavItem label="Reference Documents" icon={FileText} active={currentPage === 'reference'} onClick={() => navigate('reference')} />
+
+
+          {/* Reference Document Categories */}
+          {referenceDocuments.map((section) => (
+            <div key={section.category}>
+              <button
+                onClick={() => setExpandedRefCategories(prev => ({ ...prev, [section.category]: !prev[section.category] }))}
+                style={{
+                  width: '100%', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none',
+                  fontSize: '0.85rem', fontWeight: '400', color: 'rgba(255,255,255,0.75)',
+                  cursor: 'pointer', textAlign: 'left',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)' }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <FileText size={16} /> {section.category}
+                </span>
+                <ChevronDown size={14} style={{
+                  transform: expandedRefCategories[section.category] ? 'rotate(0deg)' : 'rotate(-90deg)',
+                  transition: 'transform 0.15s', color: 'rgba(255,255,255,0.45)',
+                }} />
+              </button>
+              {expandedRefCategories[section.category] && section.items.map((item, i) => {
+                const docId = extractNotionPageId(item.notionUrl)
+                return (
+                  <button
+                    key={i}
+                    onClick={() => navigate('doc-detail', { docId, docTitle: item.name, backTo: 'dashboard' })}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.4rem 1rem 0.4rem 2.5rem', fontSize: '0.78rem',
+                      color: 'rgba(255,255,255,0.65)', textDecoration: 'none',
+                      backgroundColor: 'transparent', transition: 'all 0.15s',
+                      width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#D4A843' }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
+                  >
+                    {item.name}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+
           <SidebarNavItem label="Quick Links" icon={Link2} active={currentPage === 'links'} onClick={() => navigate('links')} />
         </div>
 
