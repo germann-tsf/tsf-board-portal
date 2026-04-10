@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Circle,
   Clock as ClockIcon,
+  Download,
 } from 'lucide-react'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────
@@ -87,55 +88,10 @@ const STRATEGIC_PLAN_PAGE_ID = '32a84a2d-4690-81e8-ba32-cea4fc59a5e1'
 
 const FOUNDATIONAL_DOCS_NOTION_URL = 'https://www.notion.so/Foundational-Documents-33b84a2d4690816493d2e0f50f25c440'
 
-// Each category points directly to the Foundational Documents page which has
-// all documents organized with headings, toggles, and file blocks.
-// Individual items within categories that have dedicated parent pages point
-// to those parents (which contain the file download blocks).
-const FOUNDATIONAL_DOCS_PAGE_ID = '33b84a2d4690816493d2e0f50f25c440'
-
-const referenceDocuments = [
-  {
-    category: 'Governance & Legal',
-    items: [
-      { name: 'Articles of Incorporation; IRS Letter; MOU', notionUrl: 'https://www.notion.so/70fd1c99bc6042c8b364afdd841e82b9' },
-      { name: 'Bylaws', notionUrl: 'https://www.notion.so/33b84a2d46908053bd68c962067ba6f2' },
-    ],
-  },
-  {
-    category: 'Strategy & Planning',
-    items: [
-      { name: 'Strategic Plans & Action Plan', notionUrl: 'https://www.notion.so/31c94b116fc34bba9ea05a811211ffd7' },
-    ],
-  },
-  {
-    category: 'Financial Records',
-    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
-    items: [
-      { name: 'All Financial Records', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
-    ],
-  },
-  {
-    category: 'Policies',
-    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
-    items: [
-      { name: 'All Policies', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
-    ],
-  },
-  {
-    category: 'Insurance',
-    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
-    items: [
-      { name: 'All Insurance Documents', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
-    ],
-  },
-  {
-    category: 'Reports & Resources',
-    notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID,
-    items: [
-      { name: 'All Reports & Resources', notionUrl: 'https://www.notion.so/' + FOUNDATIONAL_DOCS_PAGE_ID },
-    ],
-  },
-]
+// Reference documents are now fetched dynamically from the Foundational Documents
+// Notion page via fetchFoundationalDocs() in the API. The data is passed as
+// the `foundationalDocs` prop, which is an array of { name, items[] } categories.
+// Each item has: { name, type: 'file'|'page', fileUrl?, pageId? }
 
 
 const quorumTable = [
@@ -624,59 +580,7 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
         </p>
       </div>
 
-      {/* Quick Access Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <button onClick={() => onNavigate('bylaws')} style={{
-          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
-          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#6B1D38'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
-        >
-          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#6B1D3820', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B1D38', flexShrink: 0 }}>
-            <Shield size={20} />
-          </div>
-          <div>
-            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Bylaws</p>
-            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>Governing document</p>
-          </div>
-        </button>
-        <button onClick={() => onNavigate('strategic-plan')} style={{
-          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
-          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#2A4D6E'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
-        >
-          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#2A4D6E20', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2A4D6E', flexShrink: 0 }}>
-            <Target size={20} />
-          </div>
-          <div>
-            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Strategic Plan</p>
-            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>2024–2027 plan</p>
-          </div>
-        </button>
-        <button onClick={() => onNavigate('mission')} style={{
-          backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '1rem',
-          border: '1px solid #e5e7eb', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#D4A843'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)' }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
-        >
-          <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', backgroundColor: '#D4A84320', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4A843', flexShrink: 0 }}>
-            <BookOpen size={20} />
-          </div>
-          <div>
-            <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: '600', margin: 0 }}>Mission</p>
-            <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>Our purpose</p>
-          </div>
-        </button>
-      </div>
-
-      {/* Strategic Action Plan */}
+      {/* Strategic Action Plan — directly below mission */}
       {actionPlan && actionPlan.length > 0 && (() => {
         const goalOrder = ['Goal 1: Raise $5M Annually', 'Goal 2: Board Excellence', 'Goal 3: Three-Board Collaboration', 'Goal 4: SHCP 10-Year Plan']
         const grouped = {}
@@ -1313,52 +1217,35 @@ function NotionContentPage({ pageId, title, icon }) {
   )
 }
 
-// ─── PAGE: Reference Documents ──────────────────────────────────────────
+// ReferencePage removed — categories are now individual ref- pages using dynamic Notion data
 
-function ReferencePage() {
-  const [expandedCategory, setExpandedCategory] = useState(null)
-
-  return (
-    <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '2rem' }}>Reference Documents</h1>
-
-      {referenceDocuments.map((section, idx) => (
-        <div key={idx} style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '1.5rem', overflow: 'hidden' }}>
-          <button onClick={() => setExpandedCategory(expandedCategory === section.category ? null : section.category)} style={{
-            width: '100%', padding: '1rem', backgroundColor: '#f9fafb', border: 'none',
-            textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            cursor: 'pointer', fontSize: '1rem', fontWeight: '600', color: '#1f2937',
-          }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}><FileText size={20} />{section.category}</span>
-            <ChevronDown size={20} style={{ transform: expandedCategory === section.category ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-          </button>
-          {expandedCategory === section.category && (
-            <div>
-              {section.items.map((item, itemIdx) => (
-                <div key={itemIdx} style={{ padding: '1rem', borderTop: itemIdx === 0 ? 'none' : '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.25rem 0' }}>{item.name}</h4>
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                      {item.status && <Badge text={item.status} color="#10B981" />}
-                      {item.lastReviewed && <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Last reviewed: {item.lastReviewed}</p>}
-                    </div>
-                  </div>
-                  {item.notionUrl && (
-                    <a href={item.notionUrl} target="_blank" rel="noopener noreferrer" style={{
-                      marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f3f4f6',
-                      border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.75rem',
-                      fontWeight: '600', color: '#374151', textDecoration: 'none', cursor: 'pointer',
-                    }}>Open</a>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
+const quickLinks = [
+  {
+    section: 'Board Portal (Notion)',
+    links: [
+      { name: 'Board Portal Home', url: 'https://www.notion.so/32a84a2d469081fc8ffed4169cfe75ec', description: 'Main board portal landing page' },
+      { name: 'Board of Directors', url: 'https://www.notion.so/32a84a2d469081908551e314d9377091', description: 'Agendas & minutes' },
+      { name: 'Executive Committee', url: 'https://www.notion.so/32a84a2d469081d085aad5c8119e3d16', description: 'Agendas & minutes' },
+      { name: 'Governance Committee', url: 'https://www.notion.so/32a84a2d469081cb8209fd2f43b8c4d6', description: 'Agendas & minutes' },
+      { name: 'Finance Committee', url: 'https://www.notion.so/32a84a2d469081da9b84c0493ba83575', description: 'Agendas & minutes' },
+      { name: 'Fundraising Committee', url: 'https://www.notion.so/32a84a2d469081a5a2b4effe5bf762b4', description: 'Agendas & minutes' },
+      { name: 'Student Home Construction Committee', url: 'https://www.notion.so/32a84a2d469081089910eeb3329fd212', description: 'Agendas & minutes' },
+    ],
+  },
+  {
+    section: 'Governance & Policies',
+    links: [
+      { name: 'Governance & Policies', url: 'https://www.notion.so/32a84a2d4690813c8eb7e6084d26a830', description: 'Bylaws, COI policy, board agreements' },
+      { name: 'Reports & Financials', url: 'https://www.notion.so/32a84a2d469081c8bd35d4d17a66c291', description: 'Audits, 990s, budgets' },
+    ],
+  },
+  {
+    section: 'Contact',
+    links: [
+      { name: 'Jenny Germann', url: 'mailto:germann@stevenscollege.edu', description: 'Executive Director, portal questions' },
+    ],
+  },
+]
 
 // ─── PAGE: Quick Links ──────────────────────────────────────────────────
 
@@ -1395,7 +1282,7 @@ function LinksPage() {
 
 // ─── MAIN PORTAL COMPONENT ─────────────────────────────────────────────
 
-export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
+export default function Portal({ meetings, boardMembers, actionPlan = [], foundationalDocs = [] }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
@@ -1437,40 +1324,67 @@ export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
     // Reference category pages (e.g., ref-Governance & Legal)
     if (currentPage.startsWith('ref-')) {
       const categoryName = currentPage.replace('ref-', '')
-      const section = referenceDocuments.find(s => s.category === categoryName)
+      const section = foundationalDocs.find(s => s.name === categoryName)
       if (section) {
         return (
           <div>
             <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <FileText size={28} style={{ color: '#2A4D6E' }} /> {section.category}
+              <FileText size={28} style={{ color: '#2A4D6E' }} /> {section.name}
             </h1>
             <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-              {section.items.map((item, i) => {
-                const docId = extractNotionPageId(item.notionUrl)
-                return (
-                  <button
-                    key={i}
-                    onClick={() => navigate('doc-detail', { docId, docTitle: item.name, backTo: currentPage })}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      width: '100%', padding: '1rem 1.25rem',
-                      borderBottom: i < section.items.length - 1 ? '1px solid #e5e7eb' : 'none',
-                      backgroundColor: 'white', border: 'none', borderBottomStyle: 'solid',
-                      borderBottomWidth: i < section.items.length - 1 ? '1px' : '0',
-                      borderBottomColor: '#e5e7eb',
-                      cursor: 'pointer', textAlign: 'left', transition: 'background-color 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f9fafb' }}
-                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white' }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <FileText size={18} style={{ color: '#6B1D38', flexShrink: 0 }} />
-                      <span style={{ fontSize: '0.95rem', fontWeight: '500', color: '#1f2937' }}>{item.name}</span>
+              {section.items.map((item, i) => (
+                <div key={i}>
+                  {item.type === 'file' && item.fileUrl ? (
+                    <a
+                      href={item.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        width: '100%', padding: '1rem 1.25rem',
+                        borderBottom: i < section.items.length - 1 ? '1px solid #e5e7eb' : 'none',
+                        backgroundColor: 'white', textDecoration: 'none',
+                        transition: 'background-color 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f9fafb' }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <FileText size={18} style={{ color: '#6B1D38', flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.95rem', fontWeight: '500', color: '#1f2937' }}>{item.name}</span>
+                      </div>
+                      <Download size={16} style={{ color: '#9ca3af' }} />
+                    </a>
+                  ) : item.type === 'page' && item.pageId ? (
+                    <button
+                      onClick={() => navigate('doc-detail', { docId: item.pageId, docTitle: item.name, backTo: currentPage })}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        width: '100%', padding: '1rem 1.25rem',
+                        borderBottom: i < section.items.length - 1 ? '1px solid #e5e7eb' : 'none',
+                        backgroundColor: 'white', border: 'none', cursor: 'pointer', textAlign: 'left',
+                        transition: 'background-color 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f9fafb' }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <FileText size={18} style={{ color: '#2A4D6E', flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.95rem', fontWeight: '500', color: '#1f2937' }}>{item.name}</span>
+                      </div>
+                      <ChevronRight size={16} style={{ color: '#9ca3af' }} />
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 1.25rem', borderBottom: i < section.items.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                      <FileText size={18} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.95rem', fontWeight: '500', color: '#6b7280' }}>{item.name}</span>
                     </div>
-                    <ChevronRight size={16} style={{ color: '#9ca3af' }} />
-                  </button>
-                )
-              })}
+                  )}
+                </div>
+              ))}
+              {section.items.length === 0 && (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No documents found in this category.</div>
+              )}
             </div>
           </div>
         )
@@ -1500,7 +1414,7 @@ export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
       case 'strategic-plan':
         return <NotionContentPage pageId={STRATEGIC_PLAN_PAGE_ID} title="Strategic Plan" icon={<Target size={28} style={{ color: '#2A4D6E' }} />} />
       case 'reference':
-        return <ReferencePage />
+        return null // Reference pages now use ref-{category} routing
       case 'links':
         return null
       default:
@@ -1574,14 +1488,14 @@ export default function Portal({ meetings, boardMembers, actionPlan = [] }) {
           <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
 
 
-          {/* Reference Document Categories — flat links, content in main area */}
-          {referenceDocuments.map((section) => (
+          {/* Reference Document Categories — pulled from Notion Foundational Docs */}
+          {foundationalDocs.map((section) => (
             <SidebarNavItem
-              key={section.category}
-              label={section.category}
+              key={section.name}
+              label={section.name}
               icon={FileText}
-              active={currentPage === `ref-${section.category}`}
-              onClick={() => navigate(`ref-${section.category}`)}
+              active={currentPage === `ref-${section.name}`}
+              onClick={() => navigate(`ref-${section.name}`)}
             />
           ))}
 

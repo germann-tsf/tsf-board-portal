@@ -121,6 +121,7 @@ export default function PortalPage() {
       meetings={data?.meetings || []}
       boardMembers={data?.boardMembers || []}
       actionPlan={data?.actionPlan || []}
+      foundationalDocs={data?.foundationalDocs || []}
     />
   )
 }
