@@ -13,7 +13,8 @@ export default function PortalPage() {
       try {
         const response = await fetch('/api/data')
         if (!response.ok) {
-          throw new Error('Failed to fetch data')
+          const errorBody = await response.json().catch(() => ({}))
+          throw new Error(errorBody.details || errorBody.error || 'Failed to fetch data')
         }
         const result = await response.json()
         setData(result)
