@@ -594,52 +594,85 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
           const bi = goalOrder.indexOf(b)
           return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
         })
-        const statusDot = (status) => {
-          if (status === 'Done') return { color: '#16a34a', label: 'Done' }
-          if (status === 'In progress') return { color: '#2563eb', label: 'In progress' }
-          return { color: '#9ca3af', label: 'Not started' }
+        const statusBadge = (status) => {
+          if (status === 'Done') return { bg: '#dcfce7', color: '#166534', border: '#86efac' }
+          if (status === 'In progress') return { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' }
+          return { bg: '#f3f4f6', color: '#6b7280', border: '#d1d5db' }
         }
         const goalColors = ['#6B1D38', '#2A4D6E', '#D4A843', '#4a7c59']
         return (
           <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
             <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Target size={16} /> Strategic Action Plan
+              <Target size={16} /> Strategic Action Plan 2024-2027
             </div>
-            <div style={{ padding: '1rem' }}>
+            <div style={{ padding: '0' }}>
               {sortedGoals.map((goal, gi) => {
                 const items = grouped[goal]
                 const doneCount = items.filter(i => i.status === 'Done').length
+                const inProgressCount = items.filter(i => i.status === 'In progress').length
                 const total = items.length
                 const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0
                 const gColor = goalColors[gi % goalColors.length]
                 return (
-                  <div key={goal} style={{ marginBottom: gi < sortedGoals.length - 1 ? '1.25rem' : 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <h3 style={{ fontSize: '0.85rem', fontWeight: '700', color: gColor, margin: 0 }}>{goal}</h3>
-                      <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>{doneCount}/{total} complete ({pct}%)</span>
-                    </div>
-                    <div style={{ backgroundColor: '#f3f4f6', borderRadius: '999px', height: '6px', marginBottom: '0.75rem', overflow: 'hidden' }}>
-                      <div style={{ backgroundColor: gColor, height: '100%', borderRadius: '999px', width: `${pct}%`, transition: 'width 0.3s' }} />
-                    </div>
-                    {items.map(item => {
-                      const dot = statusDot(item.status)
-                      return (
-                        <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', padding: '0.4rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: dot.color, flexShrink: 0, marginTop: '4px' }} title={dot.label} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: '0.82rem', fontWeight: '500', color: '#1f2937', margin: 0, lineHeight: '1.3' }}>{item.actionItem}</p>
-                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
-                              {item.owner && <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>{item.owner}</span>}
-                              {item.committee && <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{item.committee}</span>}
-                              {item.targetDate && <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{item.targetDate}</span>}
-                            </div>
-                            {item.progressNotes && (
-                              <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '0.15rem 0 0 0', fontStyle: 'italic' }}>{item.progressNotes}</p>
-                            )}
-                          </div>
+                  <div key={goal} style={{ borderBottom: gi < sortedGoals.length - 1 ? '2px solid #e5e7eb' : 'none' }}>
+                    {/* Goal header */}
+                    <div style={{ padding: '1rem 1.25rem 0.75rem', backgroundColor: gColor + '08' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: gColor, margin: 0 }}>{goal}</h3>
+                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                          <span style={{ color: '#166534', fontWeight: '600' }}>{doneCount} done</span>
+                          <span style={{ color: '#1e40af', fontWeight: '600' }}>{inProgressCount} active</span>
+                          <span>{total} total</span>
                         </div>
-                      )
-                    })}
+                      </div>
+                      <div style={{ backgroundColor: '#e5e7eb', borderRadius: '999px', height: '6px', overflow: 'hidden' }}>
+                        <div style={{ backgroundColor: gColor, height: '100%', borderRadius: '999px', width: `${pct}%`, transition: 'width 0.3s' }} />
+                      </div>
+                    </div>
+
+                    {/* Action items table */}
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                            <th style={{ textAlign: 'left', padding: '0.5rem 1rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Action Item</th>
+                            <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em', width: '90px' }}>Status</th>
+                            <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em', width: '160px' }}>Owner</th>
+                            <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Objective</th>
+                            <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Progress Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((item, idx) => {
+                            const badge = statusBadge(item.status)
+                            return (
+                              <tr key={item.id} style={{ borderBottom: idx < items.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                                <td style={{ padding: '0.6rem 1rem', fontWeight: '500', color: '#1f2937', lineHeight: '1.4', verticalAlign: 'top' }}>
+                                  {item.actionItem}
+                                </td>
+                                <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', verticalAlign: 'top' }}>
+                                  <span style={{
+                                    display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '999px',
+                                    fontSize: '0.7rem', fontWeight: '600',
+                                    backgroundColor: badge.bg, color: badge.color, border: `1px solid ${badge.border}`,
+                                    whiteSpace: 'nowrap',
+                                  }}>{item.status || 'Not started'}</span>
+                                </td>
+                                <td style={{ padding: '0.6rem 0.75rem', color: '#374151', verticalAlign: 'top', fontSize: '0.78rem' }}>
+                                  {item.owner || '-'}
+                                </td>
+                                <td style={{ padding: '0.6rem 0.75rem', color: '#6b7280', verticalAlign: 'top', fontSize: '0.78rem', lineHeight: '1.4' }}>
+                                  {item.objective || '-'}
+                                </td>
+                                <td style={{ padding: '0.6rem 0.75rem', color: '#9ca3af', verticalAlign: 'top', fontSize: '0.78rem', fontStyle: 'italic', lineHeight: '1.4' }}>
+                                  {item.progressNotes || '-'}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )
               })}
