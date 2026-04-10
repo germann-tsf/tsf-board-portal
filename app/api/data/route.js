@@ -22,17 +22,28 @@ export async function GET(request) {
       console.error('Members DB error:', membersResult.reason)
       errors.push(`Members: ${membersResult.reason.message}`)
     }
+    if (actionPlanResult.status === 'rejected') {
+      console.error('Action Plan DB error:', actionPlanResult.reason)
+      errors.push(`ActionPlan: ${actionPlanResult.reason.message}`)
+    }
+    if (docsResult.status === 'rejected') {
+      console.error('Docs error:', docsResult.reason)
+      errors.push(`Docs: ${docsResult.reason.message}`)
+    }
 
-    if (errors.length === 2) {
+    if (meetingsResult.status === 'rejected' && membersResult.status === 'rejected') {
       return NextResponse.json(
         { error: 'Failed to fetch data', details: errors.join(' | ') },
         { status: 500 }
       )
     }
 
+    const boardMembers = membersResult.status === 'fulfilled' ? membersResult.value : []
+
     return NextResponse.json({
       meetings: meetingsResult.status === 'fulfilled' ? meetingsResult.value : [],
-      boardMembers: membersResult.status === 'fulfilled' ? membersResult.value : [],
+      boardMembers,
+      boardMemberCount: boardMembers.length,
       actionPlan: actionPlanResult.status === 'fulfilled' ? actionPlanResult.value : [],
       foundationalDocs: docsResult.status === 'fulfilled' ? docsResult.value : [],
       warnings: errors.length ? errors : undefined,
