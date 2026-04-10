@@ -5,14 +5,33 @@ export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 export async function GET(request) {
   try {
-    const [meetings, boardMembers] = await Promise.all([
+    // Fetch independently so one failure doesn't block the other
+    const [meetingsResult, membersResult] = await Promise.allSettled([
       fetchMeetings(),
       fetchBoardMembers(),
     ])
 
+    const errors = []
+    if (meetingsResult.status === 'rejected') {
+      console.error('Meetings DB error:', meetingsResult.reason)
+      errors.push(`Meetings: ${meetingsResult.reason.message}`)
+    }
+    if (membersResult.status === 'rejected') {
+      console.error('Members DB error:', membersResult.reason)
+      errors.push(`Members: ${membersResult.reason.message}`)
+    }
+
+    if (errors.length === 2) {
+      return NextResponse.json(
+        { error: 'Failed to fetch data', details: errors.join(' | ') },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
-      meetings,
-      boardMembers,
+      meetings: meetingsResult.status === 'fulfilled' ? meetingsResult.value : [],
+      boardMembers: membersResult.status === 'fulfilled' ? membersResult.value : [],
+      warnings: errors.length ? errors : undefined,
     })
   } catch (error) {
     console.error('Error fetching data:', error)
