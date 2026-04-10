@@ -117,11 +117,19 @@ export default function PortalPage() {
   }
 
   return (
-    <Portal
-      meetings={data?.meetings || []}
-      boardMembers={data?.boardMembers || []}
-      actionPlan={data?.actionPlan || []}
-      foundationalDocs={data?.foundationalDocs || []}
-    />
+    <>
+      {data?._debug && (
+        <div style={{ margin: '1rem', padding: '1rem', backgroundColor: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '0.5rem', fontFamily: 'monospace', fontSize: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+          <strong>BOARD MEMBER DEBUG (temporary):</strong><br />
+          {JSON.stringify(data._debug, null, 2)}
+        </div>
+      )}
+      <Portal
+        meetings={data?.meetings || []}
+        boardMembers={data?.boardMembers || []}
+        actionPlan={data?.actionPlan || []}
+        foundationalDocs={data?.foundationalDocs || []}
+      />
+    </>
   )
 }
