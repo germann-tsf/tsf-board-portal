@@ -616,17 +616,12 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
                 return (
                   <div key={goal} style={{ borderBottom: gi < sortedGoals.length - 1 ? '2px solid #e5e7eb' : 'none' }}>
                     {/* Goal header */}
-                    <div style={{ padding: '1rem 1.25rem 0.75rem', backgroundColor: gColor + '08' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: gColor, margin: 0 }}>{goal}</h3>
-                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#6b7280' }}>
-                          <span style={{ color: '#166534', fontWeight: '600' }}>{doneCount} done</span>
-                          <span style={{ color: '#1e40af', fontWeight: '600' }}>{inProgressCount} active</span>
-                          <span>{total} total</span>
-                        </div>
-                      </div>
-                      <div style={{ backgroundColor: '#e5e7eb', borderRadius: '999px', height: '6px', overflow: 'hidden' }}>
-                        <div style={{ backgroundColor: gColor, height: '100%', borderRadius: '999px', width: `${pct}%`, transition: 'width 0.3s' }} />
+                    <div style={{ padding: '0.75rem 1.25rem', backgroundColor: gColor + '08', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: gColor, margin: 0 }}>{goal}</h3>
+                      <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                        <span style={{ color: '#166534', fontWeight: '600' }}>{doneCount} done</span>
+                        <span style={{ color: '#1e40af', fontWeight: '600' }}>{inProgressCount} active</span>
+                        <span>{total} total</span>
                       </div>
                     </div>
 
@@ -961,14 +956,14 @@ function MembersPage({ boardMembers, onSelectMember }) {
 
 function getMemberType(member) {
   const mt = member.membershipType
-  if (mt === 'Staff') return 'Staff'
-  if (mt === 'Committee') return 'Community'
-  if (mt === 'Ex Officio') return 'Board Member'
+  if (mt === 'Staff (Non Voting)') return 'Staff'
+  if (mt === 'Committee Only (Non Voting)') return 'Community'
   return 'Board Member'
 }
 
 function isExOfficio(member) {
-  return member.membershipType === 'Ex Officio'
+  const mt = member.membershipType
+  return mt === 'Ex officio (Non Voting)' || mt === 'Emeritus'
 }
 
 function getMemberDisplayRole(member) {
