@@ -927,15 +927,15 @@ function MembersPage({ boardMembers, onSelectMember }) {
 // ─── PAGE: Board Member Directory ──────────────────────────────────────
 
 function getMemberType(member) {
-  const pos = member.position || []
-  if (pos.some(p => p.startsWith('Non Board Member - Staff'))) return 'Staff'
-  if (pos.some(p => p.startsWith('Non Board Member - Community'))) return 'Community'
+  const mt = member.membershipType
+  if (mt === 'Staff') return 'Staff'
+  if (mt === 'Committee') return 'Community'
+  if (mt === 'Ex Officio') return 'Board Member'
   return 'Board Member'
 }
 
 function isExOfficio(member) {
-  const pos = member.position || []
-  return pos.some(p => p === 'Emeritus')
+  return member.membershipType === 'Ex Officio'
 }
 
 function getMemberDisplayRole(member) {
@@ -1485,8 +1485,6 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
 
           {/* Resources Section */}
           <SectionLabel>Resources</SectionLabel>
-          <SidebarNavItem label="Bylaws" icon={Shield} active={currentPage === 'bylaws'} onClick={() => navigate('bylaws')} />
-
 
           {/* Reference Document Categories — pulled from Notion Foundational Docs */}
           {foundationalDocs.map((section) => (
