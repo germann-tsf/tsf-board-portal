@@ -633,14 +633,7 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
                     return [
                       <tr key={`goal-${gi}`}>
                         <td colSpan={5} style={{ padding: '0.75rem 1rem', backgroundColor: gColor + '0A', borderTop: gi > 0 ? '2px solid #e5e7eb' : 'none' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: gColor }}>{goal}</span>
-                            <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem' }}>
-                              <span style={{ color: '#166534', fontWeight: '600' }}>{doneCount} done</span>
-                              <span style={{ color: '#1e40af', fontWeight: '600' }}>{inProgressCount} active</span>
-                              <span style={{ color: '#6b7280' }}>{total} total</span>
-                            </div>
-                          </div>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: gColor }}>{goal}</span>
                         </td>
                       </tr>,
                       ...items.map((item, idx) => {
