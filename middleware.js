@@ -8,7 +8,7 @@ export function middleware(request) {
   const isAuthenticated = authCookie?.value === 'authenticated'
 
   // Public paths that don't require authentication
-  const publicPaths = ['/login', '/api/auth', '/_next', '/favicon.ico']
+  const publicPaths = ['/login', '/api/auth', '/api/debug-members', '/_next', '/favicon.ico']
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
 
   // If trying to access protected path without auth, redirect to login
