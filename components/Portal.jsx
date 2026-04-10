@@ -10,7 +10,6 @@ import {
   Building2,
   Mail,
   Phone,
-  MapPin,
   LayoutDashboard,
   FileText,
   Link2,
@@ -141,26 +140,19 @@ const quorumTable = [
   { size: '18-19 members', quorum: 10 },
 ]
 
-const memberCommittees = {
-  'Peter Caddick': ['Executive', 'Governance', 'Student Home Construction', 'Board of Directors'],
-  'Dan Cicala': ['Student Home Construction', 'Board of Directors'],
-  'Jared Erb': ['Finance & Investment', 'Governance', 'Board of Directors'],
-  'Bob Garrett': ['Executive', 'Governance', 'Fundraising', 'Finance & Investment', 'Student Home Construction', 'Board of Directors'],
-  'Marc Goodhart': ['Board of Directors'],
-  'Todd Hardy': ['Governance', 'Board of Directors'],
-  'Lynn Hocker': ['Fundraising', 'Board of Directors'],
-  'Ron Johnson': ['Fundraising', 'Board of Directors'],
-  'Dustin Junto': ['Student Home Construction', 'Finance & Investment', 'Board of Directors'],
-  'Jim Kelley': ['Board of Directors'],
-  'April Lausch': ['Executive', 'Fundraising', 'Board of Directors'],
-  'Shaun Magner': ['Governance', 'Fundraising', 'Board of Directors'],
-  'Pedro Rivera': ['Executive', 'Board of Directors'],
-  'Shannon Stump': ['Fundraising', 'Finance & Investment', 'Board of Directors'],
-  'Jeff Tankesley': ['Finance & Investment', 'Executive', 'Board of Directors'],
-  'John Yurchak': ['Student Home Construction', 'Finance & Investment', 'Fundraising', 'Board of Directors'],
-  'Kate Zimmerman': ['Governance', 'Board of Directors'],
-  'Kyle Amor': [],
-  'Amy Balestier': [],
+// Committee name mapping: Notion names → portal committeeConfig names
+const committeeNameMap = {
+  'Board of Directors': 'Board of Directors',
+  'Executive Committee': 'Executive',
+  'Finance Committee': 'Finance & Investment',
+  'Fundraising Committee': 'Fundraising',
+  'Governance Committee': 'Governance',
+  'Student Home Construction Committee': 'Student Home Construction',
+}
+
+function getMemberCommittees(member) {
+  if (!member.committees) return []
+  return member.committees.map(c => committeeNameMap[c] || c)
 }
 
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────────────────
@@ -193,7 +185,7 @@ function sortBoardMembers(members) {
 }
 
 function getCommitteeMembers(committeeName, boardMembers) {
-  return boardMembers.filter(m => memberCommittees[m.name]?.includes(committeeName))
+  return boardMembers.filter(m => getMemberCommittees(m).includes(committeeName))
 }
 
 function daysUntil(dateString) {
@@ -482,7 +474,7 @@ function MemberCard({ member, onSelect }) {
 
 function MemberDetailModal({ member, committees, onClose }) {
   if (!member) return null
-  const memberCommitteeList = committees.filter(c => memberCommittees[member.name]?.includes(c.name))
+  const memberCommitteeList = committees.filter(c => getMemberCommittees(member).includes(c.name))
 
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={onClose}>
@@ -615,12 +607,8 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
                 <Calendar size={16} style={{ color: '#6B1D38' }} />
                 <span style={{ fontSize: '0.9rem', color: '#374151' }}>{formatDate(nextMeeting.date)}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin size={16} style={{ color: '#6B1D38' }} />
-                <span style={{ fontSize: '0.9rem', color: '#374151' }}>{nextMeeting.location || 'TBD'}</span>
-              </div>
             </div>
-            <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title })} style={{
+            <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title, published: nextMeeting.published })} style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
               padding: '0.75rem 1.25rem', backgroundColor: '#6B1D38', color: 'white',
               border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem',
@@ -642,7 +630,7 @@ function DashboardPage({ meetings, boardMembers, onNavigate }) {
             <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)} {meeting.location && `• ${meeting.location}`}</p>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
               </div>
               <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title })} style={{
                 padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
@@ -706,8 +694,8 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
         <div style={{ backgroundColor: committee.color + '10', border: `1px solid ${committee.color}30`, borderRadius: '0.5rem', padding: '1.25rem', marginBottom: '2rem', borderLeft: `4px solid ${committee.color}` }}>
           <p style={{ fontSize: '0.7rem', color: committee.color, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>Next Meeting</p>
           <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.5rem 0' }}>{nextMeeting.title}</h3>
-          <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>{formatDate(nextMeeting.date)} {nextMeeting.location && `• ${nextMeeting.location}`}</p>
-          <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title })} style={{
+          <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>{formatDate(nextMeeting.date)}</p>
+          <button onClick={() => onNavigate('meeting-detail', { meetingId: nextMeeting.id, meetingTitle: nextMeeting.title, published: nextMeeting.published })} style={{
             padding: '0.5rem 1rem', backgroundColor: committee.color, color: 'white',
             border: 'none', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer',
           }}>
@@ -725,14 +713,17 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
           {futureMeetings.map(m => (
             <div key={m.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{m.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)} {m.location && `• ${m.location}`}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
+                  {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
+                </div>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
-              <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title })} style={{
-                padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
+              <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title, published: m.published })} style={{
+                padding: '0.4rem 0.75rem', backgroundColor: m.published ? '#f9fafb' : '#f9fafb', border: '1px solid #d1d5db',
                 borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
               }}>
-                View Details
+                {m.published ? 'View Agenda' : 'View Details'}
               </button>
             </div>
           ))}
@@ -750,14 +741,17 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
           pastMeetings.slice(0, 20).map(m => (
             <div key={m.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{m.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)} {m.location && `• ${m.location}`}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
+                  {m.published && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontWeight: '600' }}>Published</span>}
+                </div>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
               </div>
-              <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title })} style={{
+              <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title, published: m.published })} style={{
                 padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
                 borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
               }}>
-                View Minutes
+                {m.published ? 'View Minutes' : 'View Details'}
               </button>
             </div>
           ))
@@ -769,8 +763,8 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
 
 // ─── PAGE: Meeting Detail ───────────────────────────────────────────────
 
-function MeetingDetailPage({ meetingId, meetingTitle, onBack }) {
-  const { data, loading, error } = useNotionPage(meetingId)
+function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
+  const { data, loading, error } = useNotionPage(published ? meetingId : null)
 
   return (
     <div>
@@ -784,14 +778,24 @@ function MeetingDetailPage({ meetingId, meetingTitle, onBack }) {
 
       <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>{meetingTitle || 'Meeting Details'}</h1>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
-        {loading && <LoadingSpinner />}
-        {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
-        {data && data.blocks && <NotionBlocks blocks={data.blocks} />}
-        {data && (!data.blocks || data.blocks.length === 0) && !loading && (
-          <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No agenda or documents have been added to this meeting yet.</p>
-        )}
-      </div>
+      {!published ? (
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2.5rem', textAlign: 'center' }}>
+          <FileText size={40} style={{ color: '#d1d5db', marginBottom: '1rem' }} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Agenda Not Yet Published</h3>
+          <p style={{ color: '#9ca3af', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' }}>
+            The agenda and documents for this meeting are still being prepared. Check back closer to the meeting date.
+          </p>
+        </div>
+      ) : (
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
+          {loading && <LoadingSpinner />}
+          {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
+          {data && data.blocks && <NotionBlocks blocks={data.blocks} />}
+          {data && (!data.blocks || data.blocks.length === 0) && !loading && (
+            <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No agenda or documents have been added to this meeting yet.</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -905,7 +909,7 @@ function TermExpirationPage({ boardMembers }) {
                   <td style={{ padding: '0.75rem 1rem', fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>{m.name}</td>
                   <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{m.position?.join(', ') || 'Board Member'}</td>
                   <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{formatDate(m.termStart)}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#374151', fontWeight: '500' }}>{formatDate(m.termEnd)}</td>
+                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: color, fontWeight: '500' }}>{formatDate(m.termEnd)}</td>
                   <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#6b7280' }}>{m.termCount || '-'}</td>
                   <td style={{ padding: '0.75rem 1rem' }}>
                     <Badge text={label} color={color} />
@@ -1049,6 +1053,7 @@ export default function Portal({ meetings, boardMembers }) {
         <MeetingDetailPage
           meetingId={pageParams.meetingId}
           meetingTitle={pageParams.meetingTitle}
+          published={pageParams.published}
           onBack={() => navigate(pageParams.backTo || 'dashboard')}
         />
       )
@@ -1095,8 +1100,7 @@ export default function Portal({ meetings, boardMembers }) {
           <div style={{ fontSize: '0.6rem', fontWeight: '600', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#D4A843', marginBottom: '0.25rem' }}>
             Thaddeus Stevens Foundation
           </div>
-          <h1 style={{ fontSize: '1.2rem', fontWeight: '700', margin: '0 0 0.15rem 0', color: 'white' }}>Board Portal</h1>
-          <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)', margin: 0 }}>The Shelter Forum, Inc.</p>
+          <h1 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'white' }}>Board Portal</h1>
         </div>
 
         {/* Navigation */}
@@ -1106,9 +1110,7 @@ export default function Portal({ meetings, boardMembers }) {
           <SidebarNavItem label="Board Members" icon={Users} active={currentPage === 'members'} onClick={() => navigate('members')} />
           <SidebarNavItem label="Term Expirations" icon={Clock} active={currentPage === 'term-expirations'} onClick={() => navigate('term-expirations')} />
 
-          {/* Meetings Section */}
-          <SectionLabel>Meetings</SectionLabel>
-          <SidebarNavItem label="Board of Directors" icon={Calendar} active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} />
+          <SidebarNavItem label="Board Meetings" icon={Calendar} active={currentPage === 'committee-board'} onClick={() => navigate('committee-board')} />
 
           {/* Collapsible Committees */}
           <button onClick={() => setCommitteesOpen(!committeesOpen)} style={{
@@ -1140,6 +1142,15 @@ export default function Portal({ meetings, boardMembers }) {
         {/* Footer */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '1rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
           <p style={{ margin: '0 0 0.5rem 0' }}>Thaddeus Stevens Foundation</p>
+          <a href="mailto:germann@stevenscollege.edu" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.5rem 1rem', backgroundColor: '#D4A843', color: '#1a1a2e',
+            borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: '600',
+            textDecoration: 'none', marginBottom: '0.5rem',
+          }}>
+            <Mail size={14} /> Questions? Email Jenny
+          </a>
+          <br />
           <a href="/login" style={{ color: '#D4A843', textDecoration: 'none', fontSize: '0.7rem' }}
             onClick={async e => { e.preventDefault(); await fetch('/api/auth', { method: 'DELETE' }); window.location.href = '/login' }}
           >
