@@ -1,11 +1,10 @@
 'use client'
-/* Portal v2.1 — transcription block support */
+/* TSF Board Portal */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   Search,
   Users,
-  Calendar,
   ChevronRight,
   ChevronLeft,
   Building2,
@@ -13,22 +12,51 @@ import {
   Phone,
   LayoutDashboard,
   FileText,
-  Link2,
   BookOpen,
   ChevronDown,
   ExternalLink,
-  Clock,
-  AlertTriangle,
   Shield,
   Target,
   Loader2,
   MapPin,
   Globe,
-  CheckCircle2,
-  Circle,
-  Clock as ClockIcon,
   Download,
 } from 'lucide-react'
+
+// ─── ERROR BOUNDARY ─────────────────────────────────────────────────────
+import React from 'react'
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('Portal error:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '3rem', textAlign: 'center', maxWidth: '500px', margin: '4rem auto' }}>
+          <h2 style={{ color: '#6B1D38', marginBottom: '1rem' }}>Something went wrong</h2>
+          <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+            An unexpected error occurred. Please try refreshing the page.
+          </p>
+          <button onClick={() => window.location.reload()} style={{
+            padding: '0.5rem 1.5rem', backgroundColor: '#6B1D38', color: 'white',
+            border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.9rem',
+          }}>
+            Refresh Page
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────
 
@@ -110,6 +138,15 @@ const committeeNameMap = {
   'Student Home Construction Committee': 'Student Home Construction',
 }
 
+// Map portal committee display names → Notion "Committee Roles" property values
+const chairRoleMap = {
+  Executive: 'Executive Committee Chair',
+  Governance: 'Governance Committee Chair',
+  'Finance & Investment': 'Finance Committee Chair',
+  Fundraising: 'Fundraising Committee Chair',
+  'Student Home Construction': 'Home Construction Committee Chair',
+}
+
 function getMemberCommittees(member) {
   if (!member.committees) return []
   return member.committees.map(c => committeeNameMap[c] || c)
@@ -132,7 +169,7 @@ function parseLocalDate(dateString) {
 function formatDate(dateString) {
   if (!dateString) return ''
   const date = parseLocalDate(dateString)
-  if (!date) return ''
+  if (!date || isNaN(date.getTime())) return ''
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
@@ -156,14 +193,6 @@ function sortBoardMembers(members) {
 
 // Sort committee members: chair first, then alpha by last name
 function sortCommitteeMembers(members, committeeName) {
-  // Map portal committee names back to the Committee Roles property values
-  const chairRoleMap = {
-    Executive: 'Executive Committee Chair',
-    Governance: 'Governance Committee Chair',
-    'Finance & Investment': 'Finance Committee Chair',
-    Fundraising: 'Fundraising Committee Chair',
-    'Student Home Construction': 'Home Construction Committee Chair',
-  }
   const chairRole = chairRoleMap[committeeName]
   return [...members].sort((a, b) => {
     const aIsChair = chairRole && (a.committeeRoles || []).includes(chairRole)
@@ -181,6 +210,7 @@ function getCommitteeMembers(committeeName, boardMembers) {
 function daysUntil(dateString) {
   if (!dateString) return Infinity
   const target = parseLocalDate(dateString)
+  if (!target || isNaN(target.getTime())) return Infinity
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   target.setHours(0, 0, 0, 0)
@@ -564,12 +594,17 @@ function useNotionPage(pageId) {
 
   useEffect(() => {
     if (!pageId) return
+    let cancelled = false
     setLoading(true)
     setError(null)
     fetch(`/api/notion-page?id=${pageId}`)
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false) })
-      .catch(e => { setError(e.message); setLoading(false) })
+      .then(r => {
+        if (!r.ok) throw new Error(`Failed to load page (${r.status})`)
+        return r.json()
+      })
+      .then(d => { if (!cancelled) { setData(d); setLoading(false) } })
+      .catch(e => { if (!cancelled) { setError(e.message); setLoading(false) } })
+    return () => { cancelled = true }
   }, [pageId])
 
   return { data, loading, error }
@@ -781,13 +816,6 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
           </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {sortCommitteeMembers(members, committee.name).map(m => {
-              const chairRoleMap = {
-                Executive: 'Executive Committee Chair',
-                Governance: 'Governance Committee Chair',
-                'Finance & Investment': 'Finance Committee Chair',
-                Fundraising: 'Fundraising Committee Chair',
-                'Student Home Construction': 'Home Construction Committee Chair',
-              }
               const isChair = (m.committeeRoles || []).includes(chairRoleMap[committee.name])
               return (
                 <span key={m.id} style={{
@@ -1193,8 +1221,6 @@ function BoardMemberDirectoryPage({ boardMembers }) {
   )
 }
 
-// ─── PAGE: Mission ─────────────────────────────────────────────────────
-
 // ─── PAGE: Notion Document Detail (generic inline rendering) ──────────────
 
 function NotionDocPage({ pageId, title, onBack }) {
@@ -1272,69 +1298,6 @@ function NotionContentPage({ pageId, title, icon }) {
           <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No content available.</p>
         )}
       </div>
-    </div>
-  )
-}
-
-// ReferencePage removed — categories are now individual ref- pages using dynamic Notion data
-
-const quickLinks = [
-  {
-    section: 'Board Portal (Notion)',
-    links: [
-      { name: 'Board Portal Home', url: 'https://www.notion.so/32a84a2d469081fc8ffed4169cfe75ec', description: 'Main board portal landing page' },
-      { name: 'Board of Directors', url: 'https://www.notion.so/32a84a2d469081908551e314d9377091', description: 'Agendas & minutes' },
-      { name: 'Executive Committee', url: 'https://www.notion.so/32a84a2d469081d085aad5c8119e3d16', description: 'Agendas & minutes' },
-      { name: 'Governance Committee', url: 'https://www.notion.so/32a84a2d469081cb8209fd2f43b8c4d6', description: 'Agendas & minutes' },
-      { name: 'Finance Committee', url: 'https://www.notion.so/32a84a2d469081da9b84c0493ba83575', description: 'Agendas & minutes' },
-      { name: 'Fundraising Committee', url: 'https://www.notion.so/32a84a2d469081a5a2b4effe5bf762b4', description: 'Agendas & minutes' },
-      { name: 'Student Home Construction Committee', url: 'https://www.notion.so/32a84a2d469081089910eeb3329fd212', description: 'Agendas & minutes' },
-    ],
-  },
-  {
-    section: 'Governance & Policies',
-    links: [
-      { name: 'Governance & Policies', url: 'https://www.notion.so/32a84a2d4690813c8eb7e6084d26a830', description: 'Bylaws, COI policy, board agreements' },
-      { name: 'Reports & Financials', url: 'https://www.notion.so/32a84a2d469081c8bd35d4d17a66c291', description: 'Audits, 990s, budgets' },
-    ],
-  },
-  {
-    section: 'Contact',
-    links: [
-      { name: 'Jenny Germann', url: 'mailto:germann@stevenscollege.edu', description: 'Executive Director, portal questions' },
-    ],
-  },
-]
-
-// ─── PAGE: Quick Links ──────────────────────────────────────────────────
-
-function LinksPage() {
-  return (
-    <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '2rem' }}>Quick Links</h1>
-      {quickLinks.map((section, idx) => (
-        <div key={idx} style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '1rem' }}>{section.section}</h2>
-          <div style={{ display: 'grid', gap: '1rem' }}>
-            {section.links.map((link, linkIdx) => (
-              <a key={linkIdx} href={link.url} target={link.url.startsWith('mailto') ? undefined : '_blank'} rel={link.url.startsWith('mailto') ? undefined : 'noopener noreferrer'} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'start',
-                padding: '1rem', backgroundColor: 'white', border: '1px solid #e5e7eb',
-                borderRadius: '0.375rem', textDecoration: 'none', transition: 'all 0.2s', cursor: 'pointer',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#6B1D38'; e.currentTarget.style.backgroundColor = '#fdf2f5' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.backgroundColor = 'white' }}
-              >
-                <div>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.25rem 0' }}>{link.name}</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: 0 }}>{link.description}</p>
-                </div>
-                <ExternalLink size={16} style={{ color: '#6B1D38', marginLeft: '1rem', flexShrink: 0 }} />
-              </a>
-            ))}
-          </div>
-        </div>
-      ))}
     </div>
   )
 }
@@ -1472,16 +1435,13 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
         return <NotionContentPage pageId={BYLAWS_PAGE_ID} title="Bylaws" icon={<Shield size={28} style={{ color: '#6B1D38' }} />} />
       case 'strategic-plan':
         return <NotionContentPage pageId={STRATEGIC_PLAN_PAGE_ID} title="Strategic Plan" icon={<Target size={28} style={{ color: '#2A4D6E' }} />} />
-      case 'reference':
-        return null // Reference pages now use ref-{category} routing
-      case 'links':
-        return null
       default:
         return null
     }
   }
 
   return (
+    <ErrorBoundary>
     <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#f3f4f6' }}>
       {/* ═══ SIDEBAR ═══ */}
       <div style={{
@@ -1592,5 +1552,6 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
       {/* Member Detail Modal */}
       <MemberDetailModal member={selectedMember} committees={committeeConfig} onClose={() => setSelectedMember(null)} />
     </div>
+    </ErrorBoundary>
   )
 }

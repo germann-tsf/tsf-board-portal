@@ -12,7 +12,10 @@ export function middleware(request) {
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
 
   // If trying to access protected path without auth, redirect to login
-  if (!isAuthenticated && (pathname.startsWith('/portal') || pathname.startsWith('/api/data'))) {
+  if (!isAuthenticated && (pathname.startsWith('/portal') || pathname.startsWith('/api/data') || pathname.startsWith('/api/notion-page'))) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

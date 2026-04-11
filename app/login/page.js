@@ -71,7 +71,7 @@ export default function LoginPage() {
           fontSize: '0.875rem',
           margin: 0,
         }}>
-          The Shelter Forum, Inc.
+          Board of Directors
         </p>
       </div>
 

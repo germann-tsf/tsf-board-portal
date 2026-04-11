@@ -2,7 +2,7 @@ import './globals.css'
 
 export const metadata = {
   title: 'TSF Board Portal',
-  description: 'The Shelter Forum Board of Directors Portal',
+  description: 'Thaddeus Stevens Foundation Board of Directors Portal',
 }
 
 export default function RootLayout({ children }) {
