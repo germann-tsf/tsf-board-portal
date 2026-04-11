@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchMeetings, fetchBoardMembers, fetchActionPlan, fetchFoundationalDocs, debugBoardMembers } from '@/lib/notion'
+import { fetchMeetings, fetchBoardMembers, fetchActionPlan, fetchFoundationalDocs } from '@/lib/notion'
 
 export const revalidate = 60 // ISR: revalidate every 60 seconds
 
@@ -40,11 +40,6 @@ export async function GET(request) {
 
     const boardMembers = membersResult.status === 'fulfilled' ? membersResult.value : []
 
-    let _debug = undefined
-    if (boardMembers.length === 0) {
-      try { _debug = await debugBoardMembers() } catch (e) { _debug = { error: e.message } }
-    }
-
     return NextResponse.json({
       meetings: meetingsResult.status === 'fulfilled' ? meetingsResult.value : [],
       boardMembers,
@@ -52,7 +47,6 @@ export async function GET(request) {
       actionPlan: actionPlanResult.status === 'fulfilled' ? actionPlanResult.value : [],
       foundationalDocs: docsResult.status === 'fulfilled' ? docsResult.value : [],
       warnings: errors.length ? errors : undefined,
-      _debug,
     })
   } catch (error) {
     console.error('Error fetching data:', error)
