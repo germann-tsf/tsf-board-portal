@@ -145,14 +145,31 @@ function getNextMeeting(meetings) {
 }
 
 function sortBoardMembers(members) {
-  const priorityMap = { 'Board President': 1, 'Board Vice President': 2, Secretary: 3, Treasurer: 4 }
+  const officerOrder = { President: 1, 'Vice President': 2, Secretary: 3, Treasurer: 4 }
   return [...members].sort((a, b) => {
-    const aPriority = a.position?.find(p => priorityMap[p])
-    const bPriority = b.position?.find(p => priorityMap[p])
-    if (aPriority && bPriority) {
-      if (priorityMap[aPriority] !== priorityMap[bPriority]) return priorityMap[aPriority] - priorityMap[bPriority]
-    } else if (aPriority) return -1
-    else if (bPriority) return 1
+    const aRank = officerOrder[a.officerRole] || 99
+    const bRank = officerOrder[b.officerRole] || 99
+    if (aRank !== bRank) return aRank - bRank
+    return (a.last || a.name || '').localeCompare(b.last || b.name || '')
+  })
+}
+
+// Sort committee members: chair first, then alpha by last name
+function sortCommitteeMembers(members, committeeName) {
+  // Map portal committee names back to the Committee Roles property values
+  const chairRoleMap = {
+    Executive: 'Executive Committee Chair',
+    Governance: 'Governance Committee Chair',
+    'Finance & Investment': 'Finance Committee Chair',
+    Fundraising: 'Fundraising Committee Chair',
+    'Student Home Construction': 'Home Construction Committee Chair',
+  }
+  const chairRole = chairRoleMap[committeeName]
+  return [...members].sort((a, b) => {
+    const aIsChair = chairRole && (a.committeeRoles || []).includes(chairRole)
+    const bIsChair = chairRole && (b.committeeRoles || []).includes(chairRole)
+    if (aIsChair && !bIsChair) return -1
+    if (!aIsChair && bIsChair) return 1
     return (a.last || a.name || '').localeCompare(b.last || b.name || '')
   })
 }
@@ -763,8 +780,15 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
             <Users size={18} style={{ color: committee.color }} /> Committee Members ({members.length})
           </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {sortBoardMembers(members).map(m => {
-              const isChair = m.position?.some(p => p.toLowerCase().includes(committee.name.split(' ')[0].toLowerCase()) && p.includes('Chair'))
+            {sortCommitteeMembers(members, committee.name).map(m => {
+              const chairRoleMap = {
+                Executive: 'Executive Committee Chair',
+                Governance: 'Governance Committee Chair',
+                'Finance & Investment': 'Finance Committee Chair',
+                Fundraising: 'Fundraising Committee Chair',
+                'Student Home Construction': 'Home Construction Committee Chair',
+              }
+              const isChair = (m.committeeRoles || []).includes(chairRoleMap[committee.name])
               return (
                 <span key={m.id} style={{
                   padding: '0.35rem 0.75rem', backgroundColor: isChair ? committee.color + '15' : '#f9fafb',
@@ -1014,19 +1038,30 @@ function BoardMemberDirectoryPage({ boardMembers }) {
     return true
   })
 
-  // Sort: board members first (non-ex-officio), then ex officio at bottom
+  // Sort: officers first (President, VP, Secretary, Treasurer), then board members alpha,
+  // then ex officio, then staff/community
+  const officerOrder = { President: 1, 'Vice President': 2, Secretary: 3, Treasurer: 4 }
   const finalList = [...filtered].sort((a, b) => {
     const aExOff = isExOfficio(a)
     const bExOff = isExOfficio(b)
     const aType = getMemberType(a)
     const bType = getMemberType(b)
-    // Board members first, then ex officio, then staff/community
-    const order = (m, ex) => {
+    // Group: board members (0), ex officio (1), staff/community (2)
+    const groupOrder = (m, ex) => {
       if (m === 'Board Member' && !ex) return 0
       if (ex) return 1
       return 2
     }
-    return order(aType, aExOff) - order(bType, bExOff)
+    const aGroup = groupOrder(aType, aExOff)
+    const bGroup = groupOrder(bType, bExOff)
+    if (aGroup !== bGroup) return aGroup - bGroup
+    // Within board members, officers first then alpha
+    if (aGroup === 0) {
+      const aRank = officerOrder[a.officerRole] || 99
+      const bRank = officerOrder[b.officerRole] || 99
+      if (aRank !== bRank) return aRank - bRank
+    }
+    return (a.last || a.name || '').localeCompare(b.last || b.name || '')
   })
 
   const typeBadgeColors = {
@@ -1074,12 +1109,6 @@ function BoardMemberDirectoryPage({ boardMembers }) {
       {allCommittees.length > 0 && (
         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '500', alignSelf: 'center', marginRight: '0.25rem' }}>Committee:</span>
-          <button onClick={() => setFilterCommittee('all')} style={{
-            padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
-            border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
-            backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
-            cursor: 'pointer',
-          }}>All</button>
           {allCommittees.map(c => (
             <button key={c} onClick={() => setFilterCommittee(c)} style={{
               padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === c ? '600' : '400',
@@ -1088,6 +1117,12 @@ function BoardMemberDirectoryPage({ boardMembers }) {
               cursor: 'pointer',
             }}>{c}</button>
           ))}
+          <button onClick={() => setFilterCommittee('all')} style={{
+            padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
+            border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+            backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
+            cursor: 'pointer',
+          }}>All</button>
         </div>
       )}
 
