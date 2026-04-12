@@ -1194,7 +1194,16 @@ function BoardMemberDirectoryPage({ boardMembers }) {
                     <td style={tdStyle}><Badge text={displayType} color={badgeColor} /></td>
                     <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
                     <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.committees?.join(', ') || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.75rem' }}>
+                      {m.committees?.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem' }}>
+                          {m.committees.map(c => {
+                            const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
+                            return <span key={c} style={{ display: 'inline-block', padding: '0.15rem 0.4rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', fontSize: '0.7rem', color: '#374151', whiteSpace: 'nowrap' }}>{short}</span>
+                          })}
+                        </div>
+                      ) : '-'}
+                    </td>
                     <td style={tdStyle}>
                       {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
                     </td>
