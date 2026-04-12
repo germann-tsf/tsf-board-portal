@@ -1025,7 +1025,7 @@ function getMemberDisplayRole(member) {
 
 function BoardMemberDirectoryPage({ boardMembers }) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState('all')
+  const [filterType, setFilterType] = useState('Board Member')
   const [filterCommittee, setFilterCommittee] = useState('all')
 
   // Collect all unique committee names for filter tabs
@@ -1115,44 +1115,46 @@ function BoardMemberDirectoryPage({ boardMembers }) {
         All current board members, ex officio, staff, and community committee members.
       </p>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: '1', maxWidth: '300px' }}>
+      {/* Filters — single row */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', minWidth: '200px', maxWidth: '260px', flex: '0 1 260px' }}>
           <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-          <input type="text" placeholder="Search name, employer, committee..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{
-            width: '100%', padding: '0.5rem 0.75rem 0.5rem 2.25rem',
-            border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.85rem', fontFamily: 'inherit', boxSizing: 'border-box',
+          <input type="text" placeholder="Search name, employer..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{
+            width: '100%', padding: '0.45rem 0.75rem 0.45rem 2.25rem',
+            border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.8rem', fontFamily: 'inherit', boxSizing: 'border-box',
           }} />
         </div>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          {['all', 'Board Member', 'Staff', 'Community'].map(f => (
+        <div style={{ height: '1.2rem', width: '1px', backgroundColor: '#d1d5db' }} />
+        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+          {['Board Member', 'Staff', 'Community', 'all'].map(f => (
             <button key={f} onClick={() => setFilterType(f)} style={filterBtnStyle(filterType === f)}>
               {f === 'all' ? 'All' : f}
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Committee filter tabs */}
-      {allCommittees.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '500', alignSelf: 'center', marginRight: '0.25rem' }}>Committee:</span>
-          {allCommittees.map(c => (
-            <button key={c} onClick={() => setFilterCommittee(c)} style={{
-              padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === c ? '600' : '400',
-              border: filterCommittee === c ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
-              backgroundColor: filterCommittee === c ? '#2A4D6E' : 'white', color: filterCommittee === c ? 'white' : '#374151',
+        {allCommittees.length > 0 && (<>
+          <div style={{ height: '1.2rem', width: '1px', backgroundColor: '#d1d5db' }} />
+          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+            {allCommittees.map(c => {
+              const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
+              return (
+                <button key={c} onClick={() => setFilterCommittee(c)} style={{
+                  padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === c ? '600' : '400',
+                  border: filterCommittee === c ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+                  backgroundColor: filterCommittee === c ? '#2A4D6E' : 'white', color: filterCommittee === c ? 'white' : '#374151',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>{short}</button>
+              )
+            })}
+            <button onClick={() => setFilterCommittee('all')} style={{
+              padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
+              border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+              backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
               cursor: 'pointer',
-            }}>{c}</button>
-          ))}
-          <button onClick={() => setFilterCommittee('all')} style={{
-            padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
-            border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
-            backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
-            cursor: 'pointer',
-          }}>All</button>
-        </div>
-      )}
+            }}>All</button>
+          </div>
+        </>)}
+      </div>
 
       <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
