@@ -995,7 +995,17 @@ function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
         <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
           {loading && <LoadingSpinner />}
           {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
-          {data && data.blocks && <NotionBlocks blocks={data.blocks} />}
+          {data && data.blocks && (() => {
+            // Strip "Notes" section (internal heading + everything below it)
+            const isNotesHeading = (b) => {
+              if (!b.type?.startsWith('heading_')) return false
+              const text = (b.text || []).map(s => s.content || '').join('').trim().toLowerCase()
+              return text === 'notes'
+            }
+            const notesIdx = data.blocks.findIndex(isNotesHeading)
+            const filtered = notesIdx >= 0 ? data.blocks.slice(0, notesIdx) : data.blocks
+            return filtered.length > 0 ? <NotionBlocks blocks={filtered} /> : null
+          })()}
           {data && (!data.blocks || data.blocks.length === 0) && !loading && (
             <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No agenda or documents have been added to this meeting yet.</p>
           )}
