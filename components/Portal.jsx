@@ -667,73 +667,123 @@ function DashboardPage({ meetings, boardMembers, actionPlan, isMobile, onNavigat
         }
         const goalColors = ['#6B1D38', '#2A4D6E', '#D4A843', '#4a7c59']
         return (
-          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
-            <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: isMobile ? '1rem' : '2rem' }}>
+            <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: isMobile ? '0.75rem 1rem' : '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Target size={16} /> Strategic Action Plan 2024-2027
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', tableLayout: 'fixed' }}>
-                <colgroup>
-                  <col style={{ width: '22%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col style={{ width: '15%' }} />
-                  <col style={{ width: '25%' }} />
-                  <col style={{ width: '28%' }} />
-                </colgroup>
-                <thead>
-                  <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Action Item</th>
-                    <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Status</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Owner</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Objective</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Progress Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedGoals.map((goal, gi) => {
-                    const items = grouped[goal]
-                    const doneCount = items.filter(i => i.status === 'Done').length
-                    const inProgressCount = items.filter(i => i.status === 'In progress').length
-                    const total = items.length
-                    const gColor = goalColors[gi % goalColors.length]
-                    return [
-                      <tr key={`goal-${gi}`}>
-                        <td colSpan={5} style={{ padding: '0.75rem 1rem', backgroundColor: gColor + '0A', borderTop: gi > 0 ? '2px solid #e5e7eb' : 'none' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: gColor }}>{goal}</span>
-                        </td>
-                      </tr>,
-                      ...items.map((item, idx) => {
+            {isMobile ? (
+              /* ── Mobile: card layout ── */
+              <div style={{ padding: '0.75rem' }}>
+                {sortedGoals.map((goal, gi) => {
+                  const items = grouped[goal]
+                  const gColor = goalColors[gi % goalColors.length]
+                  return (
+                    <div key={`goal-${gi}`} style={{ marginBottom: gi < sortedGoals.length - 1 ? '1rem' : 0 }}>
+                      <div style={{ padding: '0.5rem 0', borderBottom: `2px solid ${gColor}`, marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '700', color: gColor }}>{goal}</span>
+                      </div>
+                      {items.map((item) => {
                         const badge = statusBadge(item.status)
                         return (
-                          <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                            <td style={{ padding: '0.6rem 1rem', fontWeight: '500', color: '#1f2937', lineHeight: '1.4', verticalAlign: 'top' }}>
-                              {item.actionItem}
-                            </td>
-                            <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', verticalAlign: 'top' }}>
+                          <div key={item.id} style={{
+                            padding: '0.75rem', marginBottom: '0.5rem',
+                            backgroundColor: '#f9fafb', borderRadius: '0.375rem',
+                            borderLeft: `3px solid ${badge.border}`,
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1f2937', lineHeight: '1.3' }}>{item.actionItem}</span>
                               <span style={{
-                                display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '999px',
-                                fontSize: '0.7rem', fontWeight: '600',
+                                display: 'inline-block', padding: '0.15rem 0.45rem', borderRadius: '999px',
+                                fontSize: '0.65rem', fontWeight: '600', flexShrink: 0,
                                 backgroundColor: badge.bg, color: badge.color, border: `1px solid ${badge.border}`,
                                 whiteSpace: 'nowrap',
                               }}>{item.status || 'Not started'}</span>
-                            </td>
-                            <td style={{ padding: '0.6rem 0.75rem', color: '#374151', verticalAlign: 'top', fontSize: '0.78rem' }}>
-                              {item.owner || '-'}
-                            </td>
-                            <td style={{ padding: '0.6rem 0.75rem', color: '#6b7280', verticalAlign: 'top', fontSize: '0.78rem', lineHeight: '1.4' }}>
-                              {item.objective || '-'}
-                            </td>
-                            <td style={{ padding: '0.6rem 0.75rem', color: '#9ca3af', verticalAlign: 'top', fontSize: '0.78rem', fontStyle: 'italic', lineHeight: '1.4' }}>
-                              {item.progressNotes || '-'}
-                            </td>
-                          </tr>
+                            </div>
+                            {item.owner && (
+                              <p style={{ fontSize: '0.75rem', color: '#374151', margin: '0.2rem 0' }}>
+                                <span style={{ fontWeight: '600' }}>Owner:</span> {item.owner}
+                              </p>
+                            )}
+                            {item.objective && (
+                              <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.2rem 0', lineHeight: '1.4' }}>
+                                {item.objective}
+                              </p>
+                            )}
+                            {item.progressNotes && (
+                              <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0.2rem 0', fontStyle: 'italic', lineHeight: '1.4' }}>
+                                {item.progressNotes}
+                              </p>
+                            )}
+                          </div>
                         )
-                      })
-                    ]
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              /* ── Desktop: table layout ── */
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', tableLayout: 'fixed' }}>
+                  <colgroup>
+                    <col style={{ width: '22%' }} />
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '25%' }} />
+                    <col style={{ width: '28%' }} />
+                  </colgroup>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem 1rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Action Item</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Status</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Owner</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Objective</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontWeight: '600', color: '#6b7280', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Progress Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedGoals.map((goal, gi) => {
+                      const items = grouped[goal]
+                      const gColor = goalColors[gi % goalColors.length]
+                      return [
+                        <tr key={`goal-${gi}`}>
+                          <td colSpan={5} style={{ padding: '0.75rem 1rem', backgroundColor: gColor + '0A', borderTop: gi > 0 ? '2px solid #e5e7eb' : 'none' }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: gColor }}>{goal}</span>
+                          </td>
+                        </tr>,
+                        ...items.map((item) => {
+                          const badge = statusBadge(item.status)
+                          return (
+                            <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                              <td style={{ padding: '0.6rem 1rem', fontWeight: '500', color: '#1f2937', lineHeight: '1.4', verticalAlign: 'top' }}>
+                                {item.actionItem}
+                              </td>
+                              <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', verticalAlign: 'top' }}>
+                                <span style={{
+                                  display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '999px',
+                                  fontSize: '0.7rem', fontWeight: '600',
+                                  backgroundColor: badge.bg, color: badge.color, border: `1px solid ${badge.border}`,
+                                  whiteSpace: 'nowrap',
+                                }}>{item.status || 'Not started'}</span>
+                              </td>
+                              <td style={{ padding: '0.6rem 0.75rem', color: '#374151', verticalAlign: 'top', fontSize: '0.78rem' }}>
+                                {item.owner || '-'}
+                              </td>
+                              <td style={{ padding: '0.6rem 0.75rem', color: '#6b7280', verticalAlign: 'top', fontSize: '0.78rem', lineHeight: '1.4' }}>
+                                {item.objective || '-'}
+                              </td>
+                              <td style={{ padding: '0.6rem 0.75rem', color: '#9ca3af', verticalAlign: 'top', fontSize: '0.78rem', fontStyle: 'italic', lineHeight: '1.4' }}>
+                                {item.progressNotes || '-'}
+                              </td>
+                            </tr>
+                          )
+                        })
+                      ]
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )
       })()}
@@ -1164,12 +1214,14 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
                   }}>{short}</button>
                 )
               })}
-              <button onClick={() => setFilterCommittee('all')} style={{
-                padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
-                border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
-                backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
-                cursor: 'pointer',
-              }}>All</button>
+              {filterCommittee !== 'all' && (
+                <button onClick={() => setFilterCommittee('all')} style={{
+                  padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: '400',
+                  border: '1px solid #d1d5db', borderRadius: '0.375rem',
+                  backgroundColor: 'white', color: '#9ca3af',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>✕ Clear</button>
+              )}
             </div>
           </>)}
         </div>
