@@ -21,6 +21,8 @@ import {
   MapPin,
   Globe,
   Download,
+  Menu,
+  X,
 } from 'lucide-react'
 
 // ─── ERROR BOUNDARY ─────────────────────────────────────────────────────
@@ -56,6 +58,18 @@ class ErrorBoundary extends React.Component {
     }
     return this.props.children
   }
+}
+
+// ─── MOBILE HOOK ────────────────────────────────────────────────────────
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [breakpoint])
+  return isMobile
 }
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────
@@ -619,15 +633,15 @@ function extractNotionPageId(notionUrl) {
 
 // ─── PAGE: Dashboard ────────────────────────────────────────────────────
 
-function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
+function DashboardPage({ meetings, boardMembers, actionPlan, isMobile, onNavigate }) {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Dashboard</h1>
+      <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Dashboard</h1>
 
       {/* Mission Statement */}
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '1.5rem', marginBottom: '2rem', borderLeft: '4px solid #D4A843' }}>
-        <p style={{ fontSize: '1rem', lineHeight: '1.7', color: '#1f2937', fontStyle: 'italic', margin: 0 }}>
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: isMobile ? '1rem' : '1.5rem', marginBottom: isMobile ? '1rem' : '2rem', borderLeft: '4px solid #D4A843' }}>
+        <p style={{ fontSize: isMobile ? '0.9rem' : '1rem', lineHeight: '1.7', color: '#1f2937', fontStyle: 'italic', margin: 0 }}>
           The Thaddeus Stevens Foundation supports the mission of Thaddeus Stevens College of Technology by raising funds and managing resources to provide scholarships, enhance educational programs, and improve campus facilities for students pursuing technical education.
         </p>
       </div>
@@ -735,12 +749,12 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
           <>
             {upcoming.length > 0 && (
               <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '2rem' }}>
-                <div style={{ backgroundColor: '#6B1D38', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ backgroundColor: '#6B1D38', color: 'white', padding: isMobile ? '0.75rem 1rem' : '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Upcoming Meetings
                 </div>
                 <div>
                   {upcoming.map(meeting => (
-                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.5rem' : '0' }}>
                       <div>
                         <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
                         <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
@@ -765,7 +779,7 @@ function DashboardPage({ meetings, boardMembers, actionPlan, onNavigate }) {
                 </div>
                 <div>
                   {past.map(meeting => (
-                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.5rem' : '0' }}>
                       <div>
                         <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
                         <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
@@ -1023,7 +1037,7 @@ function getMemberDisplayRole(member) {
   return null
 }
 
-function BoardMemberDirectoryPage({ boardMembers }) {
+function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('Board Member')
   const [filterCommittee, setFilterCommittee] = useState('all')
@@ -1110,123 +1124,198 @@ function BoardMemberDirectoryPage({ boardMembers }) {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Member Directory</h1>
-      <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-        All current board members, ex officio, staff, and community committee members.
-      </p>
+      <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Directory</h1>
+      {!isMobile && (
+        <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          All current board members, ex officio, staff, and community committee members.
+        </p>
+      )}
 
-      {/* Filters — single row */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', minWidth: '200px', maxWidth: '260px', flex: '0 1 260px' }}>
+      {/* Filters */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        {/* Search */}
+        <div style={{ position: 'relative', marginBottom: '0.75rem', maxWidth: isMobile ? '100%' : '260px' }}>
           <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
           <input type="text" placeholder="Search name, employer..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{
             width: '100%', padding: '0.45rem 0.75rem 0.45rem 2.25rem',
             border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.8rem', fontFamily: 'inherit', boxSizing: 'border-box',
           }} />
         </div>
-        <div style={{ height: '1.2rem', width: '1px', backgroundColor: '#d1d5db' }} />
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-          {['Board Member', 'Staff', 'Community', 'all'].map(f => (
-            <button key={f} onClick={() => setFilterType(f)} style={filterBtnStyle(filterType === f)}>
-              {f === 'all' ? 'All' : f}
-            </button>
-          ))}
-        </div>
-        {allCommittees.length > 0 && (<>
-          <div style={{ height: '1.2rem', width: '1px', backgroundColor: '#d1d5db' }} />
-          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-            {allCommittees.map(c => {
-              const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
-              return (
-                <button key={c} onClick={() => setFilterCommittee(c)} style={{
-                  padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === c ? '600' : '400',
-                  border: filterCommittee === c ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
-                  backgroundColor: filterCommittee === c ? '#2A4D6E' : 'white', color: filterCommittee === c ? 'white' : '#374151',
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                }}>{short}</button>
-              )
-            })}
-            <button onClick={() => setFilterCommittee('all')} style={{
-              padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
-              border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
-              backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
-              cursor: 'pointer',
-            }}>All</button>
+        {/* Type + Committee filters — horizontally scrollable on mobile */}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '0.25rem' }}>
+          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexShrink: 0 }}>
+            {['Board Member', 'Staff', 'Community', 'all'].map(f => (
+              <button key={f} onClick={() => setFilterType(f)} style={filterBtnStyle(filterType === f)}>
+                {f === 'all' ? 'All' : (isMobile && f === 'Board Member' ? 'Board' : f)}
+              </button>
+            ))}
           </div>
-        </>)}
+          {allCommittees.length > 0 && (<>
+            <div style={{ height: '1.2rem', width: '1px', backgroundColor: '#d1d5db', flexShrink: 0 }} />
+            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexShrink: 0 }}>
+              {allCommittees.map(c => {
+                const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
+                return (
+                  <button key={c} onClick={() => setFilterCommittee(c)} style={{
+                    padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === c ? '600' : '400',
+                    border: filterCommittee === c ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+                    backgroundColor: filterCommittee === c ? '#2A4D6E' : 'white', color: filterCommittee === c ? 'white' : '#374151',
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>{short}</button>
+                )
+              })}
+              <button onClick={() => setFilterCommittee('all')} style={{
+                padding: '0.35rem 0.55rem', fontSize: '0.7rem', fontWeight: filterCommittee === 'all' ? '600' : '400',
+                border: filterCommittee === 'all' ? '1px solid #2A4D6E' : '1px solid #d1d5db', borderRadius: '0.375rem',
+                backgroundColor: filterCommittee === 'all' ? '#2A4D6E' : 'white', color: filterCommittee === 'all' ? 'white' : '#374151',
+                cursor: 'pointer',
+              }}>All</button>
+            </div>
+          </>)}
+        </div>
       </div>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ ...thStyle, width: '2rem', textAlign: 'center' }}>#</th>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Type</th>
-              <th style={thStyle}>Role</th>
-              <th style={thStyle}>Employer</th>
-              <th style={thStyle}>Committee(s)</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Phone</th>
-              <th style={thStyle}>Term #</th>
-              <th style={thStyle}>Term Start</th>
-              <th style={thStyle}>Term End</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(() => {
-              let boardNum = 0
-              return finalList.map(m => {
-                const type = getMemberType(m)
-                const exOff = isExOfficio(m)
-                const role = getMemberDisplayRole(m)
-                const isBoardMember = type === 'Board Member' && !exOff
-                if (isBoardMember) boardNum++
-                const displayType = exOff ? 'Ex Officio' : type
-                const badgeColor = exOff ? '#7C3AED' : (typeBadgeColors[type] || '#6b7280')
-                const termDays = daysUntil(m.termEnd)
-                const termWarning = termDays >= 0 && termDays <= 365
-                const isNonBoard = !isBoardMember
-                return (
-                  <tr key={m.id} style={{ backgroundColor: isNonBoard ? '#f9fafb' : 'white' }}>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center', color: '#9ca3af', fontWeight: '500' }}>{isBoardMember ? boardNum : ''}</td>
-                    <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
-                    <td style={tdStyle}><Badge text={displayType} color={badgeColor} /></td>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
-                    <td style={{ ...tdStyle, fontSize: '0.75rem' }}>
-                      {m.committees?.length > 0 ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem' }}>
-                          {m.committees.map(c => {
-                            const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
-                            return <span key={c} style={{ display: 'inline-block', padding: '0.15rem 0.4rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', fontSize: '0.7rem', color: '#374151', whiteSpace: 'nowrap' }}>{short}</span>
-                          })}
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td style={tdStyle}>
-                      {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
-                    </td>
-                    <td style={tdStyle}>
-                      {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
-                    </td>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center' }}>{m.termCount || '-'}</td>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termStart) || '-'}</td>
-                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap', color: termWarning ? '#DC2626' : '#374151', fontWeight: termWarning ? '600' : '400' }}>{formatDate(m.termEnd) || '-'}</td>
-                  </tr>
-                )
-              })
-            })()}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No members found.</div>
-        )}
-      </div>
+      {/* Mobile: Card layout */}
+      {isMobile ? (
+        <div>
+          {(() => {
+            let boardNum = 0
+            return finalList.map(m => {
+              const type = getMemberType(m)
+              const exOff = isExOfficio(m)
+              const role = getMemberDisplayRole(m)
+              const isBoardMember = type === 'Board Member' && !exOff
+              if (isBoardMember) boardNum++
+              const displayType = exOff ? 'Ex Officio' : type
+              const badgeColor = exOff ? '#7C3AED' : (typeBadgeColors[type] || '#6b7280')
+              const termDays = daysUntil(m.termEnd)
+              const termWarning = termDays >= 0 && termDays <= 365
+              return (
+                <div key={m.id} style={{
+                  backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                  padding: '1rem', marginBottom: '0.75rem',
+                  borderLeft: `3px solid ${badgeColor}`,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+                        {isBoardMember && <span style={{ color: '#9ca3af', fontWeight: '400', marginRight: '0.3rem' }}>#{boardNum}</span>}
+                        {m.name}
+                      </h3>
+                      {role && <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0.15rem 0 0 0' }}>{role}</p>}
+                    </div>
+                    <Badge text={displayType} color={badgeColor} />
+                  </div>
+                  {m.employer && (
+                    <p style={{ fontSize: '0.8rem', color: '#374151', margin: '0.25rem 0' }}>{m.employer}</p>
+                  )}
+                  {m.committees?.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem', margin: '0.4rem 0' }}>
+                      {m.committees.map(c => {
+                        const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
+                        return <span key={c} style={{ display: 'inline-block', padding: '0.15rem 0.4rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', fontSize: '0.7rem', color: '#374151' }}>{short}</span>
+                      })}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                    {m.email && (
+                      <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Mail size={13} /> {m.email}
+                      </a>
+                    )}
+                    {m.cell && (
+                      <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Phone size={13} /> {m.cell}
+                      </a>
+                    )}
+                  </div>
+                  {isBoardMember && (m.termStart || m.termEnd) && (
+                    <p style={{ fontSize: '0.75rem', color: termWarning ? '#DC2626' : '#9ca3af', fontWeight: termWarning ? '600' : '400', margin: '0.4rem 0 0 0' }}>
+                      Term {m.termCount ? `#${m.termCount} · ` : ''}{formatDate(m.termStart) || '?'} — {formatDate(m.termEnd) || '?'}
+                    </p>
+                  )}
+                </div>
+              )
+            })
+          })()}
+          {filtered.length === 0 && (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No members found.</div>
+          )}
+        </div>
+      ) : (
+        /* Desktop: Table layout */
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <th style={{ ...thStyle, width: '2rem', textAlign: 'center' }}>#</th>
+                <th style={thStyle}>Name</th>
+                <th style={thStyle}>Type</th>
+                <th style={thStyle}>Role</th>
+                <th style={thStyle}>Employer</th>
+                <th style={thStyle}>Committee(s)</th>
+                <th style={thStyle}>Email</th>
+                <th style={thStyle}>Phone</th>
+                <th style={thStyle}>Term #</th>
+                <th style={thStyle}>Term Start</th>
+                <th style={thStyle}>Term End</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                let boardNum = 0
+                return finalList.map(m => {
+                  const type = getMemberType(m)
+                  const exOff = isExOfficio(m)
+                  const role = getMemberDisplayRole(m)
+                  const isBoardMember = type === 'Board Member' && !exOff
+                  if (isBoardMember) boardNum++
+                  const displayType = exOff ? 'Ex Officio' : type
+                  const badgeColor = exOff ? '#7C3AED' : (typeBadgeColors[type] || '#6b7280')
+                  const termDays = daysUntil(m.termEnd)
+                  const termWarning = termDays >= 0 && termDays <= 365
+                  const isNonBoard = !isBoardMember
+                  return (
+                    <tr key={m.id} style={{ backgroundColor: isNonBoard ? '#f9fafb' : 'white' }}>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center', color: '#9ca3af', fontWeight: '500' }}>{isBoardMember ? boardNum : ''}</td>
+                      <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
+                      <td style={tdStyle}><Badge text={displayType} color={badgeColor} /></td>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.75rem' }}>
+                        {m.committees?.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem' }}>
+                            {m.committees.map(c => {
+                              const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
+                              return <span key={c} style={{ display: 'inline-block', padding: '0.15rem 0.4rem', backgroundColor: '#f3f4f6', borderRadius: '0.25rem', fontSize: '0.7rem', color: '#374151', whiteSpace: 'nowrap' }}>{short}</span>
+                            })}
+                          </div>
+                        ) : '-'}
+                      </td>
+                      <td style={tdStyle}>
+                        {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
+                      </td>
+                      <td style={tdStyle}>
+                        {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
+                      </td>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center' }}>{m.termCount || '-'}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{formatDate(m.termStart) || '-'}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap', color: termWarning ? '#DC2626' : '#374151', fontWeight: termWarning ? '600' : '400' }}>{formatDate(m.termEnd) || '-'}</td>
+                    </tr>
+                  )
+                })
+              })()}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No members found.</div>
+          )}
+        </div>
+      )}
 
       <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
         Showing {finalList.length} of {boardMembers.length} members.
-        Board members are numbered. Ex officio, staff, and community rows are shaded.
+        {!isMobile && ' Board members are numbered. Ex officio, staff, and community rows are shaded.'}
       </p>
     </div>
   )
@@ -1321,10 +1410,13 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
   const [selectedMember, setSelectedMember] = useState(null)
   const [boardOpen, setBoardOpen] = useState(true)
   const [committeesOpen, setCommitteesOpen] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isMobile = useIsMobile()
 
   const navigate = useCallback((page, params = {}) => {
     setCurrentPage(page)
     setPageParams(params)
+    setMobileMenuOpen(false)
     window.scrollTo(0, 0)
   }, [])
 
@@ -1435,11 +1527,11 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
 
     switch (currentPage) {
       case 'dashboard':
-        return <DashboardPage meetings={meetings} boardMembers={boardMembers} actionPlan={actionPlan} onNavigate={(page, params) => navigate(page, { ...params, backTo: 'dashboard' })} />
+        return <DashboardPage meetings={meetings} boardMembers={boardMembers} actionPlan={actionPlan} isMobile={isMobile} onNavigate={(page, params) => navigate(page, { ...params, backTo: 'dashboard' })} />
       case 'members':
         return <MembersPage boardMembers={boardMembers} onSelectMember={setSelectedMember} />
       case 'board-directory':
-        return <BoardMemberDirectoryPage boardMembers={boardMembers} />
+        return <BoardMemberDirectoryPage boardMembers={boardMembers} isMobile={isMobile} />
       case 'mission':
         return <MissionPage />
       case 'bylaws':
@@ -1454,10 +1546,45 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
   return (
     <ErrorBoundary>
     <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#f3f4f6' }}>
+      {/* ═══ MOBILE HEADER ═══ */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
+          backgroundColor: '#6B1D38', padding: '0.6rem 1rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          borderBottom: '3px solid #D4A843',
+        }}>
+          <div>
+            <div style={{ fontSize: '0.5rem', fontWeight: '600', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#D4A843' }}>
+              Thaddeus Stevens Foundation
+            </div>
+            <h1 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: 'white' }}>Board Portal</h1>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{
+            backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem',
+          }}>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      )}
+
+      {/* ═══ MOBILE OVERLAY ═══ */}
+      {isMobile && mobileMenuOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 44 }}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* ═══ SIDEBAR ═══ */}
       <div style={{
         width: '260px', backgroundColor: '#1a1a2e', display: 'flex',
         flexDirection: 'column', minHeight: '100vh', flexShrink: 0,
+        ...(isMobile ? {
+          position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 45,
+          transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.25s ease',
+        } : {}),
       }}>
         {/* Logo Header */}
         <div style={{ backgroundColor: '#6B1D38', padding: '1.25rem 1rem', borderBottom: '3px solid #D4A843' }}>
@@ -1556,7 +1683,7 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+      <div style={{ flex: 1, padding: isMobile ? '1rem' : '2rem', overflowY: 'auto', ...(isMobile ? { paddingTop: 'calc(1rem + 52px)' } : {}) }}>
         {renderPage()}
       </div>
 

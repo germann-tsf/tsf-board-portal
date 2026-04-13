@@ -24,3 +24,17 @@ a {
 button {
   font-family: inherit;
 }
+
+/* Prevent iOS text size adjustment */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Smooth scrolling for filter strips */
+::-webkit-scrollbar {
+  height: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
