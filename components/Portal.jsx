@@ -1161,6 +1161,18 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
   const [filterType, setFilterType] = useState('Board Member')
   const [filterCommittee, setFilterCommittee] = useState('all')
   const [showPastMembers, setShowPastMembers] = useState(false)
+  const [sortField, setSortField] = useState(null) // null = default sort, or 'name', 'type', 'role', 'employer', 'termEnd', 'termStart', 'termCount'
+  const [sortDir, setSortDir] = useState('asc') // 'asc' or 'desc'
+
+  const handleColumnSort = (field) => {
+    if (sortField === field) {
+      if (sortDir === 'asc') setSortDir('desc')
+      else { setSortField(null); setSortDir('asc') } // third click resets to default
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+  }
 
   // Collect all unique committee names for filter tabs (exclude "Board of Directors" — redundant with Board Member type filter)
   const allCommittees = useMemo(() => {
@@ -1200,15 +1212,52 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
     return true
   })
 
-  // Sort: officers first (President, VP, Secretary, Treasurer), then board members alpha,
-  // then ex officio, then staff/community
+  // Sort: default is officers first (President, VP, Secretary, Treasurer), then board members alpha,
+  // then ex officio, then staff/community. Custom sort overrides this.
   const officerOrder = { President: 1, 'Vice President': 2, Secretary: 3, Treasurer: 4 }
   const finalList = [...filtered].sort((a, b) => {
+    // Custom column sort
+    if (sortField) {
+      const dir = sortDir === 'asc' ? 1 : -1
+      let aVal, bVal
+      switch (sortField) {
+        case 'name':
+          aVal = (a.last || a.name || '').toLowerCase()
+          bVal = (b.last || b.name || '').toLowerCase()
+          return dir * aVal.localeCompare(bVal)
+        case 'type':
+          aVal = (isExOfficio(a) ? 'Ex Officio' : getMemberType(a)).toLowerCase()
+          bVal = (isExOfficio(b) ? 'Ex Officio' : getMemberType(b)).toLowerCase()
+          return dir * aVal.localeCompare(bVal)
+        case 'role':
+          aVal = (getMemberDisplayRole(a) || '').toLowerCase()
+          bVal = (getMemberDisplayRole(b) || '').toLowerCase()
+          return dir * aVal.localeCompare(bVal)
+        case 'employer':
+          aVal = (a.employer || '').toLowerCase()
+          bVal = (b.employer || '').toLowerCase()
+          return dir * aVal.localeCompare(bVal)
+        case 'termEnd':
+          aVal = a.termEnd ? new Date(a.termEnd).getTime() : (dir > 0 ? Infinity : -Infinity)
+          bVal = b.termEnd ? new Date(b.termEnd).getTime() : (dir > 0 ? Infinity : -Infinity)
+          return dir * (aVal - bVal)
+        case 'termStart':
+          aVal = a.termStart ? new Date(a.termStart).getTime() : (dir > 0 ? Infinity : -Infinity)
+          bVal = b.termStart ? new Date(b.termStart).getTime() : (dir > 0 ? Infinity : -Infinity)
+          return dir * (aVal - bVal)
+        case 'termCount':
+          aVal = parseInt(a.termCount) || 0
+          bVal = parseInt(b.termCount) || 0
+          return dir * (aVal - bVal)
+        default:
+          break
+      }
+    }
+    // Default sort: group by type, officers first
     const aExOff = isExOfficio(a)
     const bExOff = isExOfficio(b)
     const aType = getMemberType(a)
     const bType = getMemberType(b)
-    // Group: board members (0), ex officio (1), staff/community (2)
     const groupOrder = (m, ex) => {
       if (m === 'Board Member' && !ex) return 0
       if (ex) return 1
@@ -1217,7 +1266,6 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
     const aGroup = groupOrder(aType, aExOff)
     const bGroup = groupOrder(bType, bExOff)
     if (aGroup !== bGroup) return aGroup - bGroup
-    // Within board members, officers first then alpha
     if (aGroup === 0) {
       const aRank = officerOrder[a.officerRole] || 99
       const bRank = officerOrder[b.officerRole] || 99
@@ -1232,6 +1280,15 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
     'Community': '#D97706',
   }
 
+  const sortIndicator = (field) => {
+    if (sortField !== field) return ' ↕'
+    return sortDir === 'asc' ? ' ↑' : ' ↓'
+  }
+  const sortableThStyle = (field) => ({
+    textAlign: 'left', padding: '0.75rem 0.75rem', fontSize: '0.75rem', fontWeight: '600',
+    color: sortField === field ? '#6B1D38' : '#6b7280', textTransform: 'uppercase', whiteSpace: 'nowrap',
+    cursor: 'pointer', userSelect: 'none',
+  })
   const thStyle = { textAlign: 'left', padding: '0.75rem 0.75rem', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', whiteSpace: 'nowrap' }
   const tdStyle = { padding: '0.6rem 0.75rem', fontSize: '0.85rem', color: '#374151', borderBottom: '1px solid #e5e7eb' }
 
@@ -1416,16 +1473,16 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
             <thead>
               <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                 <th style={{ ...thStyle, width: '2rem', textAlign: 'center' }}>#</th>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Type</th>
-                <th style={thStyle}>Role</th>
-                <th style={thStyle}>Employer</th>
+                <th style={sortableThStyle('name')} onClick={() => handleColumnSort('name')}>Name{sortIndicator('name')}</th>
+                <th style={sortableThStyle('type')} onClick={() => handleColumnSort('type')}>Type{sortIndicator('type')}</th>
+                <th style={sortableThStyle('role')} onClick={() => handleColumnSort('role')}>Role{sortIndicator('role')}</th>
+                <th style={sortableThStyle('employer')} onClick={() => handleColumnSort('employer')}>Employer{sortIndicator('employer')}</th>
                 <th style={thStyle}>Committee(s)</th>
                 <th style={thStyle}>Email</th>
                 <th style={thStyle}>Phone</th>
-                <th style={thStyle}>Term #</th>
-                <th style={thStyle}>Term Start</th>
-                <th style={thStyle}>Term End</th>
+                <th style={sortableThStyle('termCount')} onClick={() => handleColumnSort('termCount')}>Term #{sortIndicator('termCount')}</th>
+                <th style={sortableThStyle('termStart')} onClick={() => handleColumnSort('termStart')}>Term Start{sortIndicator('termStart')}</th>
+                <th style={sortableThStyle('termEnd')} onClick={() => handleColumnSort('termEnd')}>Term End{sortIndicator('termEnd')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1444,7 +1501,7 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
                   const isNonBoard = !isBoardMember
                   return (
                     <tr key={m.id} style={{ backgroundColor: isNonBoard ? '#f9fafb' : 'white' }}>
-                      <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center', color: '#9ca3af', fontWeight: '500' }}>{isBoardMember ? boardNum : ''}</td>
+                      <td style={{ ...tdStyle, fontSize: '0.8rem', textAlign: 'center', color: '#9ca3af', fontWeight: '500' }}>{sortField ? '' : (isBoardMember ? boardNum : '')}</td>
                       <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
                       <td style={tdStyle}><Badge text={displayType} color={badgeColor} /></td>
                       <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#6b7280' }}>{role || '-'}</td>
