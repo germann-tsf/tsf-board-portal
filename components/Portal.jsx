@@ -345,9 +345,9 @@ function NotionBlocks({ blocks }) {
             return <h3 key={idx} style={{ fontSize: '1.1rem', fontWeight: '600', color: '#374151', margin: '1rem 0 0.5rem 0' }}><RichText segments={block.text} /></h3>
           case 'bulleted_list_item':
             return (
-              <div key={idx} style={{ display: 'flex', gap: '0.5rem', margin: '0.25rem 0', paddingLeft: '1rem' }}>
-                <span style={{ color: '#6B1D38', fontWeight: '700' }}>•</span>
-                <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.6', flex: 1 }}>
+              <div key={idx} style={{ display: 'flex', gap: '0.5rem', margin: '0.25rem 0', paddingLeft: '0.5rem' }}>
+                <span style={{ color: '#6B1D38', fontWeight: '700', flexShrink: 0 }}>•</span>
+                <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.6', flex: 1, minWidth: 0, overflowWrap: 'break-word' }}>
                   <RichText segments={block.text} />
                   {block.children && block.children.length > 0 && (
                     <div style={{ paddingLeft: '0.5rem', marginTop: '0.25rem' }}>
@@ -382,9 +382,9 @@ function NotionBlocks({ blocks }) {
             return <ToggleBlock key={idx} block={block} />
           case 'callout':
             return (
-              <div key={idx} style={{ display: 'flex', gap: '0.75rem', padding: '1rem', backgroundColor: '#fdf2f5', borderRadius: '0.375rem', margin: '0.75rem 0', border: '1px solid #f3d6de' }}>
-                <span style={{ fontSize: '1.25rem' }}>{block.icon}</span>
-                <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.6', flex: 1 }}>
+              <div key={idx} style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', backgroundColor: '#fdf2f5', borderRadius: '0.375rem', margin: '0.75rem 0', border: '1px solid #f3d6de', overflowX: 'hidden' }}>
+                <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>{block.icon}</span>
+                <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.6', flex: 1, minWidth: 0, overflowWrap: 'break-word' }}>
                   <RichText segments={block.text} />
                   {block.children && <NotionBlocks blocks={block.children} />}
                 </div>
@@ -425,14 +425,14 @@ function NotionBlocks({ blocks }) {
             ) : null
           case 'table':
             return (
-              <div key={idx} style={{ margin: '0.75rem 0', overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <div key={idx} style={{ margin: '0.75rem 0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: 0 }}>
                   <tbody>
                     {block.children?.map((row, rIdx) => (
                       <tr key={rIdx} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         {row.cells?.map((cell, cIdx) => {
                           const Tag = (rIdx === 0 && block.hasColumnHeader) || (cIdx === 0 && block.hasRowHeader) ? 'th' : 'td'
-                          return <Tag key={cIdx} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: Tag === 'th' ? '600' : '400', backgroundColor: Tag === 'th' ? '#f9fafb' : 'white', color: '#374151' }}>{cell}</Tag>
+                          return <Tag key={cIdx} style={{ padding: '0.4rem 0.5rem', textAlign: 'left', fontWeight: Tag === 'th' ? '600' : '400', backgroundColor: Tag === 'th' ? '#f9fafb' : 'white', color: '#374151', wordBreak: 'break-word', fontSize: 'inherit' }}>{cell}</Tag>
                         })}
                       </tr>
                     ))}
@@ -477,6 +477,7 @@ function NotionBlocks({ blocks }) {
 
 function ToggleBlock({ block }) {
   const [open, setOpen] = useState(false)
+  const mobile = useIsMobile()
   return (
     <div style={{ margin: '0.5rem 0' }}>
       <button onClick={() => setOpen(!open)} style={{
@@ -484,11 +485,11 @@ function ToggleBlock({ block }) {
         border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500',
         color: '#374151', padding: '0.25rem 0',
       }}>
-        <ChevronRight size={16} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }} />
+        <ChevronRight size={16} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s', flexShrink: 0 }} />
         <RichText segments={block.text} />
       </button>
       {open && block.children && (
-        <div style={{ paddingLeft: '1.5rem', marginTop: '0.25rem' }}>
+        <div style={{ paddingLeft: mobile ? '0.25rem' : '1.5rem', marginTop: '0.25rem' }}>
           <NotionBlocks blocks={block.children} />
         </div>
       )}
@@ -976,7 +977,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
 
 // ─── PAGE: Meeting Detail ───────────────────────────────────────────────
 
-function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
+function MeetingDetailPage({ meetingId, meetingTitle, published, isMobile, onBack }) {
   const { data, loading, error } = useNotionPage(meetingId)
 
   // Recursively collect all file/pdf URLs from blocks
@@ -1040,9 +1041,9 @@ function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
         )}
       </div>
 
-      <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>{meetingTitle || 'Meeting Details'}</h1>
+      <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: isMobile ? '0.75rem' : '1.5rem' }}>{meetingTitle || 'Meeting Details'}</h1>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: isMobile ? '0.75rem' : '2rem', overflowX: 'hidden', wordBreak: 'break-word' }}>
         {loading && <LoadingSpinner />}
         {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
         {data && data.blocks && (() => {
@@ -1752,8 +1753,47 @@ function NotionContentPage({ pageId, title, icon }) {
 // ─── MAIN PORTAL COMPONENT ─────────────────────────────────────────────
 
 export default function Portal({ meetings, boardMembers, pastMembers = [], actionPlan = [], foundationalDocs = [], warnings }) {
-  const [currentPage, setCurrentPage] = useState('dashboard')
-  const [pageParams, setPageParams] = useState({})
+  // ─── HASH-BASED ROUTING ─────────────────────────────────────────────
+  // Encode page + params into the URL hash so every view has a shareable link.
+  // Format: #page or #page/param1/param2
+  function encodeHash(page, params = {}) {
+    if (page === 'meeting-detail' && params.meetingId) {
+      return `#meeting/${params.meetingId}`
+    }
+    if (page === 'doc-detail' && params.docId) {
+      return `#doc/${params.docId}`
+    }
+    if (page === 'dashboard') return ''
+    return `#${page}`
+  }
+
+  function decodeHash(hash) {
+    if (!hash || hash === '#' || hash === '') return { page: 'dashboard', params: {} }
+    const clean = hash.replace(/^#/, '')
+    const parts = clean.split('/')
+    if (parts[0] === 'meeting' && parts[1]) {
+      // Look up the meeting title from the meetings prop
+      const m = meetings.find(mt => mt.id === parts[1] || mt.id?.replace(/-/g, '') === parts[1])
+      return { page: 'meeting-detail', params: { meetingId: parts[1], meetingTitle: m?.title || 'Meeting Details', published: m?.published, backTo: 'dashboard' } }
+    }
+    if (parts[0] === 'doc' && parts[1]) {
+      return { page: 'doc-detail', params: { docId: parts[1], backTo: 'dashboard' } }
+    }
+    return { page: clean, params: {} }
+  }
+
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      return decodeHash(window.location.hash).page
+    }
+    return 'dashboard'
+  })
+  const [pageParams, setPageParams] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      return decodeHash(window.location.hash).params
+    }
+    return {}
+  })
   const [selectedMember, setSelectedMember] = useState(null)
   const [boardOpen, setBoardOpen] = useState(true)
   const [committeesOpen, setCommitteesOpen] = useState(true)
@@ -1764,8 +1804,27 @@ export default function Portal({ meetings, boardMembers, pastMembers = [], actio
     setCurrentPage(page)
     setPageParams(params)
     setMobileMenuOpen(false)
+    // Update URL hash for shareable links
+    const newHash = encodeHash(page, params)
+    if (newHash) {
+      window.history.pushState(null, '', window.location.pathname + newHash)
+    } else {
+      window.history.pushState(null, '', window.location.pathname)
+    }
     window.scrollTo(0, 0)
   }, [])
+
+  // Listen for browser back/forward buttons
+  useEffect(() => {
+    const onHashChange = () => {
+      const { page, params } = decodeHash(window.location.hash)
+      setCurrentPage(page)
+      setPageParams(params)
+      window.scrollTo(0, 0)
+    }
+    window.addEventListener('popstate', onHashChange)
+    return () => window.removeEventListener('popstate', onHashChange)
+  }, [meetings])
 
   const activeCommitteeKey = currentPage.startsWith('committee-') ? currentPage.replace('committee-', '') : null
 
@@ -1788,6 +1847,7 @@ export default function Portal({ meetings, boardMembers, pastMembers = [], actio
           meetingId={pageParams.meetingId}
           meetingTitle={pageParams.meetingTitle}
           published={pageParams.published}
+          isMobile={isMobile}
           onBack={() => navigate(pageParams.backTo || 'dashboard')}
         />
       )

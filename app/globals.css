@@ -39,6 +39,25 @@ html {
   border-radius: 2px;
 }
 
+/* ═══ MOBILE STYLES ═══ */
+@media (max-width: 768px) {
+  /* Prevent horizontal page overflow */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Make tables scrollable and readable on mobile */
+  table {
+    font-size: 0.8rem;
+  }
+  table td, table th {
+    padding: 0.35rem 0.4rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
 /* ═══ PRINT STYLES ═══ */
 @media print {
   /* Hide everything except the print table */
