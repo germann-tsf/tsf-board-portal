@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
-import { fetchMeetings, fetchBoardMembers, fetchActionPlan, fetchFoundationalDocs } from '@/lib/notion'
+import { fetchMeetings, fetchBoardMembers, fetchPastMembers, fetchActionPlan, fetchFoundationalDocs } from '@/lib/notion'
 
 export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 export async function GET(request) {
   try {
     // Fetch independently so one failure doesn't block the other
-    const [meetingsResult, membersResult, actionPlanResult, docsResult] = await Promise.allSettled([
+    const [meetingsResult, membersResult, pastMembersResult, actionPlanResult, docsResult] = await Promise.allSettled([
       fetchMeetings(),
       fetchBoardMembers(),
+      fetchPastMembers(),
       fetchActionPlan(),
       fetchFoundationalDocs(),
     ])
@@ -21,6 +22,10 @@ export async function GET(request) {
     if (membersResult.status === 'rejected') {
       console.error('Members DB error:', membersResult.reason)
       errors.push(`Members: ${membersResult.reason.message}`)
+    }
+    if (pastMembersResult.status === 'rejected') {
+      console.error('Past Members DB error:', pastMembersResult.reason)
+      errors.push(`PastMembers: ${pastMembersResult.reason.message}`)
     }
     if (actionPlanResult.status === 'rejected') {
       console.error('Action Plan DB error:', actionPlanResult.reason)
@@ -44,6 +49,7 @@ export async function GET(request) {
       meetings: meetingsResult.status === 'fulfilled' ? meetingsResult.value : [],
       boardMembers,
       boardMemberCount: boardMembers.length,
+      pastMembers: pastMembersResult.status === 'fulfilled' ? pastMembersResult.value : [],
       actionPlan: actionPlanResult.status === 'fulfilled' ? actionPlanResult.value : [],
       foundationalDocs: docsResult.status === 'fulfilled' ? docsResult.value : [],
       warnings: errors.length ? errors : undefined,

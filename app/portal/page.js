@@ -120,6 +120,7 @@ export default function PortalPage() {
     <Portal
       meetings={data?.meetings || []}
       boardMembers={data?.boardMembers || []}
+      pastMembers={data?.pastMembers || []}
       actionPlan={data?.actionPlan || []}
       foundationalDocs={data?.foundationalDocs || []}
     />

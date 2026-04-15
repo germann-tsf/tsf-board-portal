@@ -1149,16 +1149,17 @@ function getMemberDisplayRole(member) {
   return null
 }
 
-function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
+function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('Board Member')
   const [filterCommittee, setFilterCommittee] = useState('all')
+  const [showPastMembers, setShowPastMembers] = useState(false)
 
-  // Collect all unique committee names for filter tabs
+  // Collect all unique committee names for filter tabs (exclude "Board of Directors" — redundant with Board Member type filter)
   const allCommittees = useMemo(() => {
     const set = new Set()
     boardMembers.forEach(m => {
-      (m.committees || []).forEach(c => set.add(c))
+      (m.committees || []).forEach(c => { if (c !== 'Board of Directors') set.add(c) })
     })
     return Array.from(set).sort()
   }, [boardMembers])
@@ -1245,22 +1246,41 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
           <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Directory</h1>
           {!isMobile && (
             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
-              All current board members, ex officio, staff, and community committee members.
+              {showPastMembers ? 'Members who have resigned from the board.' : 'All current board members, ex officio, staff, and community committee members.'}
             </p>
           )}
         </div>
-        {!isMobile && (
-          <button onClick={handlePrint} className="no-print" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-            padding: '0.5rem 1rem', backgroundColor: '#6B1D38', color: 'white',
-            border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem',
-            fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-          }}>
-            <Printer size={15} /> Print List
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+          {!isMobile && !showPastMembers && (
+            <button onClick={handlePrint} className="no-print" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.5rem 1rem', backgroundColor: '#6B1D38', color: 'white',
+              border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem',
+              fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap',
+            }}>
+              <Printer size={15} /> Print List
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* Current / Past Members toggle */}
+      <div className="no-print" style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', padding: '0.25rem', width: 'fit-content' }}>
+        <button onClick={() => setShowPastMembers(false)} style={{
+          padding: '0.45rem 1rem', fontSize: '0.8rem', fontWeight: !showPastMembers ? '600' : '400',
+          backgroundColor: !showPastMembers ? 'white' : 'transparent', color: !showPastMembers ? '#1f2937' : '#6b7280',
+          border: 'none', borderRadius: '0.375rem', cursor: 'pointer',
+          boxShadow: !showPastMembers ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+        }}>Current Members</button>
+        <button onClick={() => setShowPastMembers(true)} style={{
+          padding: '0.45rem 1rem', fontSize: '0.8rem', fontWeight: showPastMembers ? '600' : '400',
+          backgroundColor: showPastMembers ? 'white' : 'transparent', color: showPastMembers ? '#1f2937' : '#6b7280',
+          border: 'none', borderRadius: '0.375rem', cursor: 'pointer',
+          boxShadow: showPastMembers ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+        }}>Past Members {pastMembers.length > 0 ? `(${pastMembers.length})` : ''}</button>
+      </div>
+
+      {!showPastMembers ? (<>
       {/* Filters */}
       <div className="no-print" style={{ marginBottom: '1.5rem' }}>
         {/* Search */}
@@ -1458,7 +1478,7 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
           <h1 style={{ fontSize: '14pt', fontWeight: '700', margin: '0 0 2px 0', color: '#1f2937' }}>Thaddeus Stevens Foundation</h1>
           <h2 style={{ fontSize: '12pt', fontWeight: '600', margin: '0 0 2px 0', color: '#374151' }}>
             Board Directory
-            {filterType !== 'all' ? ` — ${filterType}s` : ''}
+            {filterType !== 'all' ? ` — ${filterType === 'Staff' ? 'Staff Members' : filterType === 'Community' ? 'Community Members' : filterType === 'Board Member' ? 'Board Members' : filterType + 's'}` : ''}
             {filterCommittee !== 'all' ? ` — ${filterCommittee.replace(' Committee', '')}` : ''}
           </h2>
           <p style={{ fontSize: '8pt', color: '#6b7280', margin: 0 }}>
@@ -1510,6 +1530,70 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
           </tbody>
         </table>
       </div>
+      </>) : (
+      /* ═══ PAST MEMBERS VIEW ═══ */
+      <div>
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+          {pastMembers.length === 0 ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>
+              <Users size={40} style={{ marginBottom: '1rem', opacity: 0.3 }} />
+              <p>No past members found.</p>
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.75rem' }}>
+              {pastMembers.map(m => (
+                <div key={m.id} style={{ backgroundColor: '#f9fafb', borderRadius: '0.5rem', padding: '1rem', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.95rem', color: '#1f2937', marginBottom: '0.3rem' }}>{m.name}</div>
+                  {m.resigned && <div style={{ fontSize: '0.8rem', color: '#DC2626', marginBottom: '0.3rem' }}>Resigned: {formatDate(m.resigned)}</div>}
+                  {m.email && <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{m.email}</div>}
+                  {m.employer && <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>{m.employer}{m.title ? ` — ${m.title}` : ''}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={thStyle}>Name</th>
+                  <th style={thStyle}>Resigned</th>
+                  <th style={thStyle}>Email</th>
+                  <th style={thStyle}>Phone</th>
+                  <th style={thStyle}>Employer</th>
+                  <th style={thStyle}>Committees</th>
+                  <th style={thStyle}>Term</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pastMembers.map(m => (
+                  <tr key={m.id}>
+                    <td style={{ ...tdStyle, fontWeight: '600', color: '#1f2937', whiteSpace: 'nowrap' }}>{m.name}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', color: '#DC2626', whiteSpace: 'nowrap' }}>{formatDate(m.resigned) || '-'}</td>
+                    <td style={tdStyle}>
+                      {m.email ? <a href={`mailto:${m.email}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem' }}>{m.email}</a> : '-'}
+                    </td>
+                    <td style={tdStyle}>
+                      {m.cell ? <a href={`tel:${m.cell}`} style={{ color: '#6B1D38', textDecoration: 'none', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{m.cell}</a> : '-'}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem' }}>{m.employer || '-'}</td>
+                    <td style={{ ...tdStyle, fontSize: '0.75rem' }}>
+                      {m.committees?.length > 0
+                        ? m.committees.map(c => c.replace(' Committee', '').replace('Board of Directors', 'Board')).join(', ')
+                        : '-'}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                      {m.termStart || m.termEnd ? `${formatDate(m.termStart) || '?'} – ${formatDate(m.termEnd) || '?'}` : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
+          Showing {pastMembers.length} past members.
+        </p>
+      </div>
+      )}
     </div>
   )
 }
@@ -1597,7 +1681,7 @@ function NotionContentPage({ pageId, title, icon }) {
 
 // ─── MAIN PORTAL COMPONENT ─────────────────────────────────────────────
 
-export default function Portal({ meetings, boardMembers, actionPlan = [], foundationalDocs = [] }) {
+export default function Portal({ meetings, boardMembers, pastMembers = [], actionPlan = [], foundationalDocs = [] }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
@@ -1724,7 +1808,7 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
       case 'members':
         return <MembersPage boardMembers={boardMembers} onSelectMember={setSelectedMember} />
       case 'board-directory':
-        return <BoardMemberDirectoryPage boardMembers={boardMembers} isMobile={isMobile} />
+        return <BoardMemberDirectoryPage boardMembers={boardMembers} pastMembers={pastMembers} isMobile={isMobile} />
       case 'mission':
         return <MissionPage />
       case 'bylaws':
