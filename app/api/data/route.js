@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { fetchMeetings, fetchBoardMembers, fetchPastMembers, fetchActionPlan, fetchFoundationalDocs } from '@/lib/notion'
 
-export const revalidate = 60 // ISR: revalidate every 60 seconds
+export const revalidate = 300 // ISR: revalidate every 5 minutes
 
 export async function GET(request) {
   try {

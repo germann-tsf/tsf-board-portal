@@ -610,16 +610,23 @@ function useNotionPage(pageId) {
   useEffect(() => {
     if (!pageId) return
     let cancelled = false
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000) // 30s timeout
     setLoading(true)
     setError(null)
-    fetch(`/api/notion-page?id=${pageId}`)
+    fetch(`/api/notion-page?id=${pageId}`, { signal: controller.signal })
       .then(r => {
         if (!r.ok) throw new Error(`Failed to load page (${r.status})`)
         return r.json()
       })
       .then(d => { if (!cancelled) { setData(d); setLoading(false) } })
-      .catch(e => { if (!cancelled) { setError(e.message); setLoading(false) } })
-    return () => { cancelled = true }
+      .catch(e => {
+        if (!cancelled) {
+          setError(e.name === 'AbortError' ? 'Request timed out. Please try again.' : e.message)
+          setLoading(false)
+        }
+      })
+    return () => { cancelled = true; clearTimeout(timeout); controller.abort() }
   }, [pageId])
 
   return { data, loading, error }
@@ -1688,7 +1695,7 @@ function NotionContentPage({ pageId, title, icon }) {
 
 // ─── MAIN PORTAL COMPONENT ─────────────────────────────────────────────
 
-export default function Portal({ meetings, boardMembers, pastMembers = [], actionPlan = [], foundationalDocs = [] }) {
+export default function Portal({ meetings, boardMembers, pastMembers = [], actionPlan = [], foundationalDocs = [], warnings }) {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [pageParams, setPageParams] = useState({})
   const [selectedMember, setSelectedMember] = useState(null)
@@ -1969,6 +1976,14 @@ export default function Portal({ meetings, boardMembers, pastMembers = [], actio
 
       {/* ═══ MAIN CONTENT ═══ */}
       <div style={{ flex: 1, padding: isMobile ? '1rem' : '2rem', overflowY: 'auto', ...(isMobile ? { paddingTop: 'calc(1rem + 52px)' } : {}) }}>
+        {warnings && warnings.length > 0 && (
+          <div className="no-print" style={{
+            backgroundColor: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '0.5rem',
+            padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400e',
+          }}>
+            <strong>Some data may be unavailable:</strong> {warnings.join('; ')}
+          </div>
+        )}
         {renderPage()}
       </div>
 

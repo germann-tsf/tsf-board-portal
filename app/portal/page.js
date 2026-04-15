@@ -123,6 +123,7 @@ export default function PortalPage() {
       pastMembers={data?.pastMembers || []}
       actionPlan={data?.actionPlan || []}
       foundationalDocs={data?.foundationalDocs || []}
+      warnings={data?.warnings}
     />
   )
 }

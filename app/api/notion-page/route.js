@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { fetchPageBlocks, fetchPageMeta } from '@/lib/notion'
 
+export const revalidate = 300 // Revalidate every 5 minutes (keeps Notion file URLs fresh)
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
