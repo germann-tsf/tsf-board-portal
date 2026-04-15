@@ -23,6 +23,7 @@ import {
   Download,
   Menu,
   X,
+  Printer,
 } from 'lucide-react'
 
 // ─── ERROR BOUNDARY ─────────────────────────────────────────────────────
@@ -1182,17 +1183,35 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
     cursor: 'pointer',
   })
 
+  const handlePrint = () => {
+    window.print()
+  }
+
   return (
     <div>
-      <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Directory</h1>
-      {!isMobile && (
-        <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-          All current board members, ex officio, staff, and community committee members.
-        </p>
-      )}
+      <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+        <div>
+          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Directory</h1>
+          {!isMobile && (
+            <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
+              All current board members, ex officio, staff, and community committee members.
+            </p>
+          )}
+        </div>
+        {!isMobile && (
+          <button onClick={handlePrint} className="no-print" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.5rem 1rem', backgroundColor: '#6B1D38', color: 'white',
+            border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem',
+            fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
+            <Printer size={15} /> Print List
+          </button>
+        )}
+      </div>
 
       {/* Filters */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div className="no-print" style={{ marginBottom: '1.5rem' }}>
         {/* Search */}
         <div style={{ position: 'relative', marginBottom: '0.75rem', maxWidth: isMobile ? '100%' : '260px' }}>
           <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
@@ -1238,6 +1257,7 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
       </div>
 
       {/* Mobile: Card layout */}
+      <div className="no-print">
       {isMobile ? (
         <div>
           {(() => {
@@ -1374,11 +1394,71 @@ function BoardMemberDirectoryPage({ boardMembers, isMobile }) {
           )}
         </div>
       )}
+      </div>
 
-      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
+      <p className="no-print" style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem' }}>
         Showing {finalList.length} of {boardMembers.length} members.
         {!isMobile && ' Board members are numbered. Ex officio, staff, and community rows are shaded.'}
       </p>
+
+      {/* ═══ PRINT-ONLY TABLE ═══ */}
+      <div className="print-only" style={{ display: 'none' }}>
+        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '14pt', fontWeight: '700', margin: '0 0 2px 0', color: '#1f2937' }}>Thaddeus Stevens Foundation</h1>
+          <h2 style={{ fontSize: '12pt', fontWeight: '600', margin: '0 0 2px 0', color: '#374151' }}>
+            Board Directory
+            {filterType !== 'all' ? ` — ${filterType}s` : ''}
+            {filterCommittee !== 'all' ? ` — ${filterCommittee.replace(' Committee', '')}` : ''}
+          </h2>
+          <p style={{ fontSize: '8pt', color: '#6b7280', margin: 0 }}>
+            Printed {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · {finalList.length} members
+          </p>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8pt' }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>#</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Name</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Role</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Employer</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Committee(s)</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Email</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Phone</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Term</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(() => {
+              let boardNum = 0
+              return finalList.map((m, idx) => {
+                const type = getMemberType(m)
+                const exOff = isExOfficio(m)
+                const role = getMemberDisplayRole(m)
+                const isBoardMember = type === 'Board Member' && !exOff
+                if (isBoardMember) boardNum++
+                return (
+                  <tr key={m.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '3px 6px', color: '#9ca3af', verticalAlign: 'top' }}>{isBoardMember ? boardNum : ''}</td>
+                    <td style={{ padding: '3px 6px', fontWeight: '600', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{m.name}</td>
+                    <td style={{ padding: '3px 6px', color: '#6b7280', verticalAlign: 'top', fontSize: '7.5pt' }}>{role || (exOff ? 'Ex Officio' : '-')}</td>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7.5pt' }}>{m.employer || '-'}</td>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7pt' }}>
+                      {m.committees?.length > 0
+                        ? m.committees.map(c => c.replace(' Committee', '').replace('Board of Directors', 'Board')).join(', ')
+                        : '-'}
+                    </td>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7.5pt' }}>{m.email || '-'}</td>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7.5pt', whiteSpace: 'nowrap' }}>{m.cell || '-'}</td>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7pt', whiteSpace: 'nowrap' }}>
+                      {m.termStart || m.termEnd ? `${formatDate(m.termStart) || '?'} – ${formatDate(m.termEnd) || '?'}` : '-'}
+                    </td>
+                  </tr>
+                )
+              })
+            })()}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

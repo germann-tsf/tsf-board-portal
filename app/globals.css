@@ -38,3 +38,67 @@ html {
   background: #d1d5db;
   border-radius: 2px;
 }
+
+/* ═══ PRINT STYLES ═══ */
+@media print {
+  /* Hide everything except the print table */
+  .no-print,
+  nav,
+  header {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Hide the sidebar and mobile header */
+  body > div > div > div:first-child {
+    display: none !important;
+  }
+
+  /* Reset main content area */
+  body,
+  html {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Override the flex layout so content fills the page */
+  body > div > div {
+    display: block !important;
+  }
+
+  /* Main content padding for print */
+  body > div > div > div:last-child {
+    padding: 0.25in !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: landscape;
+    margin: 0.4in 0.3in;
+  }
+
+  /* Clean up table for print */
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Hide the screen-only board directory table */
+  .print-only ~ div,
+  .print-only ~ p {
+    display: none !important;
+  }
+
+  /* Ensure links print as text */
+  a {
+    color: #1f2937 !important;
+    text-decoration: none !important;
+  }
+}
