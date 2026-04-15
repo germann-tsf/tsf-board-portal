@@ -60,6 +60,13 @@ html {
     padding: 0 !important;
   }
 
+  /* Force browsers to print background colors and images */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   /* Override the flex layout so content fills the page */
   body > div > div {
     display: block !important;

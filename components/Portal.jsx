@@ -1504,6 +1504,7 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
             <tr>
               <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>#</th>
               <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Name</th>
+              <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Type</th>
               <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Role</th>
               <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Employer</th>
               <th style={{ textAlign: 'left', padding: '4px 6px', borderBottom: '2px solid #1f2937', fontWeight: '700', fontSize: '7pt', textTransform: 'uppercase' }}>Committee(s)</th>
@@ -1522,19 +1523,27 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
                 const isBoardMember = type === 'Board Member' && !exOff
                 if (isBoardMember) boardNum++
                 return (
-                  <tr key={m.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <tr key={m.id} style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: !isBoardMember ? '#f9fafb' : 'white' }}>
                     <td style={{ padding: '3px 6px', color: '#9ca3af', verticalAlign: 'top' }}>{isBoardMember ? boardNum : ''}</td>
                     <td style={{ padding: '3px 6px', fontWeight: '600', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{m.name}</td>
-                    <td style={{ padding: '3px 6px', color: '#6b7280', verticalAlign: 'top', fontSize: '7.5pt' }}>{role || (exOff ? 'Ex Officio' : '-')}</td>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top' }}>
+                      <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: '3px', fontSize: '6.5pt', fontWeight: '600', color: 'white', backgroundColor: exOff ? '#7C3AED' : (typeBadgeColors[type] || '#6b7280') }}>
+                        {exOff ? 'Ex Officio' : type}
+                      </span>
+                    </td>
+                    <td style={{ padding: '3px 6px', color: '#6b7280', verticalAlign: 'top', fontSize: '7.5pt' }}>{role || '-'}</td>
                     <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7.5pt' }}>{m.employer || '-'}</td>
                     <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7pt' }}>
                       {m.committees?.length > 0
-                        ? m.committees.map(c => c.replace(' Committee', '').replace('Board of Directors', 'Board')).join(', ')
+                        ? m.committees.map((c, i) => {
+                            const short = c.replace(' Committee', '').replace('Board of Directors', 'Board')
+                            return <span key={c} style={{ display: 'inline-block', padding: '1px 4px', backgroundColor: '#f3f4f6', borderRadius: '2px', fontSize: '6.5pt', color: '#374151', marginRight: '2px', marginBottom: '1px' }}>{short}</span>
+                          })
                         : '-'}
                     </td>
                     <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7.5pt' }}>{m.email || '-'}</td>
                     <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7.5pt', whiteSpace: 'nowrap' }}>{m.cell || '-'}</td>
-                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7pt', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '3px 6px', verticalAlign: 'top', fontSize: '7pt', whiteSpace: 'nowrap', color: (daysUntil(m.termEnd) >= 0 && daysUntil(m.termEnd) <= 365) ? '#DC2626' : '#374151', fontWeight: (daysUntil(m.termEnd) >= 0 && daysUntil(m.termEnd) <= 365) ? '600' : '400' }}>
                       {m.termStart || m.termEnd ? `${formatDate(m.termStart) || '?'} – ${formatDate(m.termEnd) || '?'}` : '-'}
                     </td>
                   </tr>
