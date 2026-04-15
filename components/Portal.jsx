@@ -1472,7 +1472,7 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                <th style={{ ...thStyle, width: '2rem', textAlign: 'center' }}>#</th>
+                <th style={{ ...thStyle, width: '2rem', textAlign: 'center', cursor: 'pointer', userSelect: 'none', color: !sortField ? '#6B1D38' : '#6b7280' }} onClick={() => { setSortField(null); setSortDir('asc') }} title="Reset to default sort">#</th>
                 <th style={sortableThStyle('name')} onClick={() => handleColumnSort('name')}>Name{sortIndicator('name')}</th>
                 <th style={sortableThStyle('type')} onClick={() => handleColumnSort('type')}>Type{sortIndicator('type')}</th>
                 <th style={sortableThStyle('role')} onClick={() => handleColumnSort('role')}>Role{sortIndicator('role')}</th>
