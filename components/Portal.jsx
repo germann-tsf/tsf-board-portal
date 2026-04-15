@@ -1253,7 +1253,7 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
           <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Board Directory</h1>
           {!isMobile && (
             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
-              {showPastMembers ? 'Members who have resigned from the board.' : 'All current board members, ex officio, staff, and community committee members.'}
+              {showPastMembers ? 'Members who have resigned or termed out from the board.' : 'All current board members, ex officio, staff, and community committee members.'}
             </p>
           )}
         </div>
