@@ -1236,7 +1236,14 @@ function BoardMemberDirectoryPage({ boardMembers, pastMembers = [], isMobile }) 
   })
 
   const handlePrint = () => {
+    // Inject landscape @page override for board directory only
+    const style = document.createElement('style')
+    style.id = 'print-landscape-override'
+    style.textContent = '@page { size: landscape; margin: 0.4in 0.3in; }'
+    document.head.appendChild(style)
     window.print()
+    // Remove override after print dialog closes
+    document.getElementById('print-landscape-override')?.remove()
   }
 
   return (
