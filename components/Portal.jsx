@@ -977,7 +977,7 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
 // ─── PAGE: Meeting Detail ───────────────────────────────────────────────
 
 function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
-  const { data, loading, error } = useNotionPage(published ? meetingId : null)
+  const { data, loading, error } = useNotionPage(meetingId)
 
   // Recursively collect all file/pdf URLs from blocks
   const collectFileUrls = useCallback((blocks) => {
@@ -1016,7 +1016,7 @@ function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
           <ChevronLeft size={16} /> Back to Meetings
         </button>
 
-        {published && data && !loading && (
+        {data && !loading && (
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button onClick={handlePrint} style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
@@ -1042,34 +1042,24 @@ function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
 
       <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>{meetingTitle || 'Meeting Details'}</h1>
 
-      {!published ? (
-        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2.5rem', textAlign: 'center' }}>
-          <FileText size={40} style={{ color: '#d1d5db', marginBottom: '1rem' }} />
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>Agenda Not Yet Published</h3>
-          <p style={{ color: '#9ca3af', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' }}>
-            The agenda and documents for this meeting are still being prepared. Check back closer to the meeting date.
-          </p>
-        </div>
-      ) : (
-        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
-          {loading && <LoadingSpinner />}
-          {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
-          {data && data.blocks && (() => {
-            // Strip "Notes" section (internal heading + everything below it)
-            const isNotesHeading = (b) => {
-              if (!b.type?.startsWith('heading_')) return false
-              const text = (b.text || []).map(s => s.content || '').join('').trim().toLowerCase()
-              return text === 'notes'
-            }
-            const notesIdx = data.blocks.findIndex(isNotesHeading)
-            const filtered = notesIdx >= 0 ? data.blocks.slice(0, notesIdx) : data.blocks
-            return filtered.length > 0 ? <NotionBlocks blocks={filtered} /> : null
-          })()}
-          {data && (!data.blocks || data.blocks.length === 0) && !loading && (
-            <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No agenda or documents have been added to this meeting yet.</p>
-          )}
-        </div>
-      )}
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
+        {loading && <LoadingSpinner />}
+        {error && <p style={{ color: '#DC2626' }}>Error loading content: {error}</p>}
+        {data && data.blocks && (() => {
+          // Strip "Notes" section (internal heading + everything below it)
+          const isNotesHeading = (b) => {
+            if (!b.type?.startsWith('heading_')) return false
+            const text = (b.text || []).map(s => s.content || '').join('').trim().toLowerCase()
+            return text === 'notes'
+          }
+          const notesIdx = data.blocks.findIndex(isNotesHeading)
+          const filtered = notesIdx >= 0 ? data.blocks.slice(0, notesIdx) : data.blocks
+          return filtered.length > 0 ? <NotionBlocks blocks={filtered} /> : null
+        })()}
+        {data && (!data.blocks || data.blocks.length === 0) && !loading && (
+          <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No agenda or documents have been added to this meeting yet.</p>
+        )}
+      </div>
     </div>
   )
 }
