@@ -972,15 +972,66 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
 function MeetingDetailPage({ meetingId, meetingTitle, published, onBack }) {
   const { data, loading, error } = useNotionPage(published ? meetingId : null)
 
+  // Recursively collect all file/pdf URLs from blocks
+  const collectFileUrls = useCallback((blocks) => {
+    const urls = []
+    if (!blocks) return urls
+    for (const block of blocks) {
+      if ((block.type === 'file' || block.type === 'pdf') && block.fileUrl) {
+        urls.push({ url: block.fileUrl, name: block.fileName || 'File' })
+      }
+      if (block.children) {
+        urls.push(...collectFileUrls(block.children))
+      }
+    }
+    return urls
+  }, [])
+
+  const fileUrls = useMemo(() => {
+    if (!data?.blocks) return []
+    return collectFileUrls(data.blocks)
+  }, [data, collectFileUrls])
+
+  const handlePrint = () => window.print()
+
+  const handleOpenAllAttachments = () => {
+    fileUrls.forEach(f => window.open(f.url, '_blank'))
+  }
+
   return (
     <div>
-      <button onClick={onBack} style={{
-        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-        background: 'none', border: 'none', color: '#6B1D38', fontSize: '0.875rem',
-        fontWeight: '500', cursor: 'pointer', marginBottom: '1rem', padding: '0.25rem 0',
-      }}>
-        <ChevronLeft size={16} /> Back to Meetings
-      </button>
+      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+        <button onClick={onBack} style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+          background: 'none', border: 'none', color: '#6B1D38', fontSize: '0.875rem',
+          fontWeight: '500', cursor: 'pointer', padding: '0.25rem 0',
+        }}>
+          <ChevronLeft size={16} /> Back to Meetings
+        </button>
+
+        {published && data && !loading && (
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button onClick={handlePrint} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.45rem 0.85rem', backgroundColor: '#6B1D38', color: 'white',
+              border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem',
+              fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap',
+            }}>
+              <Printer size={14} /> Print / Save PDF
+            </button>
+            {fileUrls.length > 0 && (
+              <button onClick={handleOpenAllAttachments} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.45rem 0.85rem', backgroundColor: '#2A4D6E', color: 'white',
+                border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem',
+                fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap',
+              }}>
+                <ExternalLink size={14} /> Open All Attachments ({fileUrls.length})
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>{meetingTitle || 'Meeting Details'}</h1>
 
@@ -1690,7 +1741,7 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
     <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#f3f4f6' }}>
       {/* ═══ MOBILE HEADER ═══ */}
       {isMobile && (
-        <div style={{
+        <div className="no-print" style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
           backgroundColor: '#6B1D38', padding: '0.6rem 1rem',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1713,13 +1764,14 @@ export default function Portal({ meetings, boardMembers, actionPlan = [], founda
       {/* ═══ MOBILE OVERLAY ═══ */}
       {isMobile && mobileMenuOpen && (
         <div
+          className="no-print"
           style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 44 }}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* ═══ SIDEBAR ═══ */}
-      <div style={{
+      <div className="no-print" style={{
         width: '260px', backgroundColor: '#1a1a2e', display: 'flex',
         flexDirection: 'column', minHeight: '100vh', flexShrink: 0,
         ...(isMobile ? {

@@ -52,11 +52,6 @@ html {
     display: block !important;
   }
 
-  /* Hide the sidebar and mobile header */
-  body > div > div > div:first-child {
-    display: none !important;
-  }
-
   /* Reset main content area */
   body,
   html {
@@ -68,11 +63,6 @@ html {
   /* Override the flex layout so content fills the page */
   body > div > div {
     display: block !important;
-  }
-
-  /* Main content padding for print */
-  body > div > div > div:last-child {
-    padding: 0.25in !important;
   }
 
   /* Page setup */
