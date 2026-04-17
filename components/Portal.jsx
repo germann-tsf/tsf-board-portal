@@ -196,6 +196,87 @@ function getNextMeeting(meetings) {
   return futureMeetings[futureMeetings.length - 1]
 }
 
+// TSF fiscal year runs July 1 – June 30. A meeting dated 2025-08-15 belongs to
+// FY "2025–2026"; a meeting dated 2026-04-14 belongs to FY "2025–2026"; a
+// meeting dated 2026-07-10 belongs to FY "2026–2027".
+function getFiscalYearLabel(dateString) {
+  const d = parseLocalDate(dateString)
+  if (!d) return 'Undated'
+  const y = d.getFullYear()
+  const m = d.getMonth() // 0 = Jan, 6 = Jul
+  return m >= 6 ? `${y}–${y + 1}` : `${y - 1}–${y}`
+}
+
+// Group meetings into { fyLabel: [meetings...] }, sorted newest→oldest within each FY.
+// Returns an array of [fyLabel, meetings] pairs ordered most-recent FY first.
+function groupMeetingsByFiscalYear(meetings) {
+  const groups = {}
+  for (const m of meetings) {
+    if (!m.date) continue
+    const fy = getFiscalYearLabel(m.date)
+    if (!groups[fy]) groups[fy] = []
+    groups[fy].push(m)
+  }
+  for (const fy of Object.keys(groups)) {
+    groups[fy].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date))
+  }
+  // Sort FY labels descending ("2026–2027" before "2025–2026") by their starting year
+  return Object.entries(groups).sort((a, b) => {
+    const ay = parseInt(a[0].split('–')[0], 10) || 0
+    const by = parseInt(b[0].split('–')[0], 10) || 0
+    return by - ay
+  })
+}
+
+function currentFiscalYearLabel() {
+  const today = new Date()
+  const y = today.getFullYear()
+  const m = today.getMonth()
+  return m >= 6 ? `${y}–${y + 1}` : `${y - 1}–${y}`
+}
+
+// Collapsible fiscal-year section used on past-meetings lists.
+function FiscalYearSection({ label, meetings, defaultOpen, onNavigate, isMobile }) {
+  const [open, setOpen] = useState(!!defaultOpen)
+  return (
+    <div style={{ borderBottom: '1px solid #e5e7eb' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: open ? '#f9fafb' : 'white', border: 'none', padding: '0.75rem 1rem',
+          fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', cursor: 'pointer',
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <ChevronRight size={16} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s', color: '#6B1D38' }} />
+          FY {label}
+          <span style={{ color: '#6b7280', fontWeight: '400', fontSize: '0.8rem' }}>({meetings.length})</span>
+        </span>
+      </button>
+      {open && (
+        <div>
+          {meetings.map(m => (
+            <div key={m.id} style={{ padding: '0.75rem 1rem 0.75rem 2.25rem', borderTop: '1px solid #f3f4f6', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.5rem' : '0' }}>
+              <div>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{m.title}</h4>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
+              </div>
+              <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title, published: m.published })} style={{
+                padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
+                borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
+              }}>
+                View Agenda & Minutes
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function sortBoardMembers(members) {
   const officerOrder = { President: 1, 'Vice President': 2, Secretary: 3, Treasurer: 4 }
   return [...members].sort((a, b) => {
@@ -331,6 +412,23 @@ function RichText({ segments }) {
 function NotionBlocks({ blocks }) {
   if (!blocks || blocks.length === 0) return <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No content available.</p>
 
+  // Precompute the 1-based position of each numbered_list_item within its
+  // contiguous run. The counter resets whenever a non-numbered block breaks
+  // the sequence, so paragraphs/headings between numbered lists start a new
+  // list at 1 (matching Notion's own rendering behavior).
+  const numberedPositions = new Array(blocks.length).fill(0)
+  {
+    let counter = 0
+    for (let i = 0; i < blocks.length; i++) {
+      if (blocks[i].type === 'numbered_list_item') {
+        counter += 1
+        numberedPositions[i] = counter
+      } else {
+        counter = 0
+      }
+    }
+  }
+
   return (
     <div>
       {blocks.map((block, idx) => {
@@ -360,7 +458,7 @@ function NotionBlocks({ blocks }) {
           case 'numbered_list_item':
             return (
               <div key={idx} style={{ display: 'flex', gap: '0.5rem', margin: '0.25rem 0', paddingLeft: '1rem' }}>
-                <span style={{ color: '#6B1D38', fontWeight: '600', minWidth: '1.25rem' }}>{idx + 1}.</span>
+                <span style={{ color: '#6B1D38', fontWeight: '600', minWidth: '1.25rem' }}>{numberedPositions[idx]}.</span>
                 <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.6', flex: 1 }}>
                   <RichText segments={block.text} />
                   {block.children && block.children.length > 0 && (
@@ -802,7 +900,9 @@ function DashboardPage({ meetings, boardMembers, actionPlan, isMobile, onNavigat
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         const upcoming = meetings.filter(m => m.date && parseLocalDate(m.date) >= today).reverse()
-        const past = meetings.filter(m => m.date && parseLocalDate(m.date) < today).slice(0, 6)
+        const pastAll = meetings.filter(m => m.date && parseLocalDate(m.date) < today)
+        const pastByFY = groupMeetingsByFiscalYear(pastAll)
+        const currentFY = currentFiscalYearLabel()
 
         return (
           <>
@@ -831,26 +931,21 @@ function DashboardPage({ meetings, boardMembers, actionPlan, isMobile, onNavigat
               </div>
             )}
 
-            {past.length > 0 && (
+            {pastByFY.length > 0 && (
               <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                 <div style={{ backgroundColor: '#2A4D6E', color: 'white', padding: '1rem', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Past Meetings
+                  Past Meetings ({pastAll.length})
                 </div>
                 <div>
-                  {past.map(meeting => (
-                    <div key={meeting.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.5rem' : '0' }}>
-                      <div>
-                        <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.15rem 0' }}>{meeting.title}</h4>
-                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(meeting.date)}</p>
-                      </div>
-                      <button onClick={() => onNavigate('meeting-detail', { meetingId: meeting.id, meetingTitle: meeting.title, published: meeting.published })} style={{
-                        padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
-                        borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151',
-                        cursor: 'pointer', whiteSpace: 'nowrap',
-                      }}>
-                        View Agenda & Minutes
-                      </button>
-                    </div>
+                  {pastByFY.map(([fyLabel, fyMeetings]) => (
+                    <FiscalYearSection
+                      key={fyLabel}
+                      label={fyLabel}
+                      meetings={fyMeetings}
+                      defaultOpen={fyLabel === currentFY}
+                      onNavigate={onNavigate}
+                      isMobile={isMobile}
+                    />
                   ))}
                 </div>
               </div>
@@ -865,12 +960,15 @@ function DashboardPage({ meetings, boardMembers, actionPlan, isMobile, onNavigat
 // ─── PAGE: Committee Meetings ───────────────────────────────────────────
 
 function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }) {
+  const isMobile = useIsMobile()
   const committeeMeetings = meetings.filter(m => m.committee === committee.name)
   const nextMeeting = getNextMeeting(committeeMeetings)
   const now = new Date(); now.setHours(0, 0, 0, 0)
   const pastMeetings = committeeMeetings.filter(m => !m.date || parseLocalDate(m.date) < now)
   const futureMeetings = committeeMeetings.filter(m => m.date && parseLocalDate(m.date) >= now).reverse()
   const members = getCommitteeMembers(committee.name, boardMembers)
+  const pastByFY = groupMeetingsByFiscalYear(pastMeetings)
+  const currentFY = currentFiscalYearLabel()
 
   return (
     <div>
@@ -945,29 +1043,23 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
         </div>
       )}
 
-      {/* Past Meetings */}
+      {/* Past Meetings — grouped by fiscal year (July 1 – June 30) */}
       <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ backgroundColor: '#4b5563', color: 'white', padding: '0.75rem 1rem', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Past Meetings ({pastMeetings.length})
         </div>
-        {pastMeetings.length === 0 ? (
+        {pastByFY.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>No past meetings found.</div>
         ) : (
-          pastMeetings.slice(0, 20).map(m => (
-            <div key={m.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>{m.title}</h4>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>{formatDate(m.date)}</p>
-              </div>
-              <button onClick={() => onNavigate('meeting-detail', { meetingId: m.id, meetingTitle: m.title, published: m.published })} style={{
-                padding: '0.4rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db',
-                borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', color: '#374151', cursor: 'pointer',
-              }}>
-                View Agenda & Minutes
-              </button>
-            </div>
+          pastByFY.map(([fyLabel, fyMeetings]) => (
+            <FiscalYearSection
+              key={fyLabel}
+              label={fyLabel}
+              meetings={fyMeetings}
+              defaultOpen={fyLabel === currentFY}
+              onNavigate={onNavigate}
+              isMobile={isMobile}
+            />
           ))
         )}
       </div>
@@ -978,7 +1070,30 @@ function CommitteeMeetingsPage({ committee, meetings, boardMembers, onNavigate }
 // ─── PAGE: Meeting Detail ───────────────────────────────────────────────
 
 function MeetingDetailPage({ meetingId, meetingTitle, published, isMobile, onBack }) {
-  const { data, loading, error } = useNotionPage(meetingId)
+  // Defense in depth: fetchMeetings() already filters drafts out of the list, but
+  // a stale URL like /portal#meeting/<draftId> could still hit this route. Block
+  // the content fetch entirely when the meeting isn't flagged as Published.
+  const { data, loading, error } = useNotionPage(published ? meetingId : null)
+
+  if (!published) {
+    return (
+      <div>
+        <div className="no-print" style={{ marginBottom: '1rem' }}>
+          <button onClick={onBack} style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            background: 'none', border: 'none', color: '#6B1D38', fontSize: '0.875rem',
+            fontWeight: '500', cursor: 'pointer', padding: '0.25rem 0',
+          }}>
+            <ChevronLeft size={16} /> Back to Meetings
+          </button>
+        </div>
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '2rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>Not available</h2>
+          <p style={{ color: '#6b7280', margin: 0 }}>This meeting has not been published yet.</p>
+        </div>
+      </div>
+    )
+  }
 
   // Recursively collect all file/pdf URLs from blocks
   const collectFileUrls = useCallback((blocks) => {
